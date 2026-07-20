@@ -1,0 +1,3197 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no"
+    />
+    <title>🚀 ยานจิ๋วท่องทวีป – เกมภูมิศาสตร์</title>
+    <meta
+      name="description"
+      content="เกมยานจิ๋วท่องทวีปสำหรับเด็กประถมศึกษา ฝึกความรู้ภูมิศาสตร์ทวีปต่างๆ"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(
+          circle at 50% 50%,
+          #0d0c2e 0%,
+          #030318 100%
+        );
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        font-family: "Kanit", "Sarabun", sans-serif;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: none;
+      }
+      #wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        gap: 8px;
+      }
+      #gameCanvas {
+        display: block;
+        border-radius: 16px;
+        box-shadow:
+          0 0 50px rgba(76, 201, 240, 0.22),
+          0 0 100px rgba(114, 9, 183, 0.1);
+        touch-action: none;
+        cursor: crosshair;
+        flex-shrink: 0;
+      }
+      #muteBtn {
+        position: absolute;
+        top: 14px;
+        left: 14px;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1.5px solid rgba(255, 255, 255, 0.15);
+        color: #fff;
+        font-size: 18px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.25s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        z-index: 100;
+        outline: none;
+        padding-right: 2px;
+      }
+      #muteBtn:hover {
+        background: rgba(255, 255, 255, 0.18);
+        border-color: rgba(255, 255, 255, 0.35);
+        transform: scale(1.08);
+        box-shadow: 0 0 15px rgba(76, 201, 240, 0.4);
+      }
+      #muteBtn:active {
+        transform: scale(0.95);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="wrapper">
+      <div id="gameContainer" style="position: relative; display: inline-block;">
+        <canvas id="gameCanvas"></canvas>
+        <button id="muteBtn" onclick="toggleMute(event)" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">🔊</button>
+      </div>
+    </div>
+    <script>
+      "use strict";
+      /* =============================================
+   DATA
+============================================= */
+      const CONTINENTS = {
+        เอเชีย: {
+          emoji: "🌏",
+          color: "#FF6B9D",
+          countries: [
+            { name: "ไทย", flag: "🇹🇭", code: "th" },
+            { name: "ญี่ปุ่น", flag: "🇯🇵", code: "jp" },
+            { name: "จีน", flag: "🇨🇳", code: "cn" },
+            { name: "อินเดีย", flag: "🇮🇳", code: "in" },
+            { name: "เวียดนาม", flag: "🇻🇳", code: "vn" },
+            { name: "อินโดนีเซีย", flag: "🇮🇩", code: "id" },
+            { name: "เกาหลีใต้", flag: "🇰🇷", code: "kr" },
+            { name: "ฟิลิปปินส์", flag: "🇵🇭", code: "ph" },
+            { name: "มาเลเซีย", flag: "🇲🇾", code: "my" },
+            { name: "สิงคโปร์", flag: "🇸🇬", code: "sg" },
+            { name: "กัมพูชา", flag: "🇰🇭", code: "kh" },
+            { name: "เมียนมาร์", flag: "🇲🇲", code: "mm" },
+            { name: "ลาว", flag: "🇱🇦", code: "la" },
+            { name: "บังกลาเทศ", flag: "🇧🇩", code: "bd" },
+            { name: "ปากีสถาน", flag: "🇵🇰", code: "pk" },
+            { name: "เกาหลีเหนือ", flag: "🇰🇵", code: "kp" },
+            { name: "ไต้หวัน", flag: "🇹🇼", code: "tw" },
+            { name: "ฮ่องกง", flag: "🇭🇰", code: "hk" },
+            { name: "มาเก๊า", flag: "🇲🇴", code: "mo" },
+            { name: "คาซัคสถาน", flag: "🇰🇿", code: "kz" },
+            { name: "อุซเบกิสถาน", flag: "🇺🇿", code: "uz" },
+            { name: "คีร์กีซสถาน", flag: "🇰🇬", code: "kg" },
+            { name: "ทาจิกิสถาน", flag: "🇹🇯", code: "tj" },
+            { name: "เติร์กเมนิสถาน", flag: "tm", code: "tm" },
+            { name: "ซาอุดีอาระเบีย", flag: "🇸🇦", code: "sa" },
+            { name: "สหรัฐอาหรับเอมิเรตส์", flag: "🇦🇪", code: "ae" },
+            { name: "กาตาร์", flag: "🇶🇦", code: "qa" },
+            { name: "คูเวต", flag: "🇰🇼", code: "kw" },
+            { name: "โอมาน", flag: "🇴🇲", code: "om" },
+            { name: "บาห์เรน", flag: "🇧🇭", code: "bh" },
+            { name: "เยเมน", flag: "🇾🇪", code: "ye" },
+            { name: "อิรัก", flag: "🇮🇶", code: "iq" },
+            { name: "อิหร่าน", flag: "🇮🇷", code: "ir" },
+            { name: "ซีเรีย", flag: "🇸🇾", code: "sy" },
+            { name: "จอร์แดน", flag: "🇯🇴", code: "jo" },
+            { name: "เลบานอน", flag: "🇱🇧", code: "lb" },
+            { name: "อิสราเอล", flag: "🇮🇱", code: "il" },
+            { name: "ปาเลสไตน์", flag: "🇵🇸", code: "ps" },
+            { name: "ตุรกี", flag: "🇹🇷", code: "tr" },
+            { name: "จอร์เกีย", flag: "🇬🇪", code: "ge" },
+            { name: "อาร์เมเนีย", flag: "🇦🇲", code: "am" },
+            { name: "อาเซอร์ไบจาน", flag: "🇦🇿", code: "az" },
+            { name: "มองโกเลีย", flag: "🇲🇳", code: "mn" },
+            { name: "เนปาล", flag: "🇳🇵", code: "np" },
+            { name: "ศรีลังกา", flag: "🇱🇰", code: "lk" },
+            { name: "มัลดีฟส์", flag: "🇲🇻", code: "mv" },
+            { name: "บรูไน", flag: "🇧🇳", code: "bn" },
+            { name: "ติมอร์-เลสเต", flag: "🇹🇱", code: "tl" },
+            { name: "ภูฏาน", flag: "🇧🇹", code: "bt" },
+          ],
+        },
+        ยุโรป: {
+          emoji: "🌍",
+          color: "#4CC9F0",
+          countries: [
+            { name: "ฝรั่งเศส", flag: "🇫🇷", code: "fr" },
+            { name: "เยอรมนี", flag: "🇩🇪", code: "de" },
+            { name: "อังกฤษ", flag: "🇬🇧", code: "gb" },
+            { name: "อิตาลี", flag: "🇮🇹", code: "it" },
+            { name: "สเปน", flag: "🇪🇸", code: "es" },
+            { name: "โปรตุเกส", flag: "🇵🇹", code: "pt" },
+            { name: "เนเธอร์แลนด์", flag: "🇳🇱", code: "nl" },
+            { name: "สวีเดน", flag: "🇸🇪", code: "se" },
+            { name: "นอร์เวย์", flag: "🇳🇴", code: "no" },
+            { name: "ฟินแลนด์", flag: "🇫🇮", code: "fi" },
+            { name: "เดนมาร์ก", flag: "🇩🇰", code: "dk" },
+            { name: "กรีซ", flag: "🇬🇷", code: "gr" },
+            { name: "โปแลนด์", flag: "🇵🇱", code: "pl" },
+            { name: "สวิตเซอร์แลนด์", flag: "🇨🇭", code: "ch" },
+            { name: "ออสเตรีย", flag: "🇦🇹", code: "at" },
+            { name: "เบลเยียม", flag: "🇧🇪", code: "be" },
+            { name: "ไอร์แลนด์", flag: "🇮🇪", code: "ie" },
+            { name: "รัสเซีย", flag: "🇷🇺", code: "ru" },
+            { name: "ยูเครน", flag: "🇺🇦", code: "ua" },
+            { name: "สาธารณรัฐเช็ก", flag: "🇨🇿", code: "cz" },
+            { name: "ฮังการี", flag: "🇭🇺", code: "hu" },
+            { name: "โรมาเนีย", flag: "🇷🇴", code: "ro" },
+            { name: "บัลแกเรีย", flag: "🇧🇬", code: "bg" },
+            { name: "โครเอเชีย", flag: "🇭🇷", code: "hr" },
+            { name: "สโลวาเกีย", flag: "🇸🇰", code: "sk" },
+            { name: "สโลวีเนีย", flag: "🇸🇮", code: "si" },
+            { name: "เอสโตเนีย", flag: "🇪🇪", code: "ee" },
+            { name: "ลัตเวีย", flag: "🇱🇻", code: "lv" },
+            { name: "ลิทัวเนีย", flag: "🇱🇹", code: "lt" },
+            { name: "เบลารุส", flag: "🇧🇾", code: "by" },
+            { name: "มอลโดวา", flag: "🇲🇩", code: "md" },
+            { name: "แอลเบเนีย", flag: "🇦🇱", code: "al" },
+            { name: "มาซิโดเนียเหนือ", flag: "🇲🇰", code: "mk" },
+            { name: "เซอร์เบีย", flag: "🇷🇸", code: "rs" },
+            { name: "มอนเตเนโกร", flag: "🇲🇪", code: "me" },
+            { name: "บอสเนียและเฮอร์เซโกวีนา", flag: "🇧🇦", code: "ba" },
+            { name: "ไอซ์แลนด์", flag: "🇮🇸", code: "is" },
+            { name: "ลักเซมเบิร์ก", flag: "🇱🇺", code: "lu" },
+            { name: "มอลตา", flag: "🇲🇹", code: "mt" },
+            { name: "โมนาโก", flag: "🇲🇨", code: "mc" },
+            { name: "อันดอร์รา", flag: "🇦🇩", code: "ad" },
+            { name: "ซานมารีโน", flag: "🇸🇲", code: "sm" },
+            { name: "ลิกเตนสไตน์", flag: "🇱🇮", code: "li" },
+            { name: "วาติกัน", flag: "🇻🇦", code: "va" },
+            { name: "ไซปรัส", flag: "🇨🇾", code: "cy" },
+          ],
+        },
+        แอฟริกา: {
+          emoji: "🌍",
+          color: "#F7B731",
+          countries: [
+            { name: "อียิปต์", flag: "🇪🇬", code: "eg" },
+            { name: "แอฟริกาใต้", flag: "🇿🇦", code: "za" },
+            { name: "ไนจีเรีย", flag: "🇳🇬", code: "ng" },
+            { name: "เคนยา", flag: "🇰🇪", code: "ke" },
+            { name: "เอธิโอเปีย", flag: "🇪🇹", code: "et" },
+            { name: "โมร็อกโก", flag: "🇲🇦", code: "ma" },
+            { name: "กานา", flag: "🇬🇭", code: "gh" },
+            { name: "แทนซาเนีย", flag: "🇹🇿", code: "tz" },
+            { name: "แอลจีเรีย", flag: "🇩🇿", code: "dz" },
+            { name: "แคเมอรูน", flag: "🇨🇲", code: "cm" },
+            { name: "เซเนกัล", flag: "🇸🇳", code: "sn" },
+            { name: "โมซัมบิก", flag: "🇲🇿", code: "mz" },
+            { name: "ตูนิเซีย", flag: "🇹🇳", code: "tn" },
+            { name: "ลิเบีย", flag: "🇱🇾", code: "ly" },
+            { name: "ซูดาน", flag: "🇸🇩", code: "sd" },
+            { name: "ซูดานใต้", flag: "🇸🇸", code: "ss" },
+            { name: "ยูกันดา", flag: "🇺🇬", code: "ug" },
+            { name: "แองโกลา", flag: "🇦🇴", code: "ao" },
+            { name: "มาดากัสการ์", flag: "🇲🇬", code: "mg" },
+            { name: "ไอวอรีโคสต์", flag: "🇨🇮", code: "ci" },
+            { name: "ซิมบับเว", flag: "🇿🇼", code: "zw" },
+            { name: "แซมเบีย", flag: "🇿🇲", code: "zm" },
+            { name: "มาลาวี", flag: "🇲🇼", code: "mw" },
+            { name: "บอตสวานา", flag: "🇧🇼", code: "bw" },
+            { name: "นามิเบีย", flag: "🇳🇦", code: "na" },
+            { name: "เลโซโท", flag: "🇱🇸", code: "ls" },
+            { name: "เอสวาตินี", flag: "🇸🇿", code: "sz" },
+            { name: "กาบอง", flag: "🇬🇦", code: "ga" },
+            { name: "คองโก", flag: "🇨🇬", code: "cg" },
+            { name: "ดีอาร์ คองโก", flag: "🇨🇩", code: "cd" },
+            { name: "แอฟริกากลาง", flag: "🇨🇫", code: "cf" },
+            { name: "ชาด", flag: "🇹🇩", code: "td" },
+            { name: "ไนเจอร์", flag: "🇳🇪", code: "ne" },
+            { name: "มาลี", flag: "🇲🇱", code: "ml" },
+            { name: "มอริเตเนีย", flag: "🇲🇷", code: "mr" },
+            { name: "เซียร์ราลีโอน", flag: "🇸🇱", code: "sl" },
+            { name: "ไลบีเรีย", flag: "🇱🇷", code: "lr" },
+            { name: "กินี", flag: "🇬🇳", code: "gn" },
+            { name: "กินี-บิสเซา", flag: "🇬🇼", code: "gw" },
+            { name: "แกมเบีย", flag: "🇬🇲", code: "gm" },
+            { name: "โซมาเลีย", flag: "🇸🇴", code: "so" },
+            { name: "จิบูตี", flag: "🇩🇯", code: "dj" },
+            { name: "เอริเทรีย", flag: "🇪🇷", code: "er" },
+            { name: "รวันดา", flag: "🇷🇼", code: "rw" },
+            { name: "บุรุนดี", flag: "🇧🇮", code: "bi" },
+            { name: "มอริเชียส", flag: "🇲🇺", code: "mu" },
+            { name: "เซเชลส์", flag: "🇸🇨", code: "sc" },
+            { name: "โคโมโรส", flag: "🇰🇲", code: "km" },
+            { name: "กาบูเวร์ดี", flag: "🇨🇻", code: "cv" },
+            { name: "เซาตูเม", flag: "🇸🇹", code: "st" },
+            { name: "อิเควทอเรียลกินี", flag: "🇬🇶", code: "gq" },
+            { name: "โตโก", flag: "🇹🇬", code: "tg" },
+            { name: "เบนิน", flag: "🇧🇯", code: "bj" },
+            { name: "บูร์กินาฟาโซ", flag: "🇧🇫", code: "bf" },
+          ],
+        },
+        อเมริกา: {
+          emoji: "🌎",
+          color: "#A29BFE",
+          countries: [
+            { name: "สหรัฐอเมริกา", flag: "🇺🇸", code: "us" },
+            { name: "แคนาดา", flag: "🇨🇦", code: "ca" },
+            { name: "บราซิล", flag: "🇧🇷", code: "br" },
+            { name: "เม็กซิโก", flag: "🇲🇽", code: "mx" },
+            { name: "อาร์เจนตินา", flag: "🇦🇷", code: "ar" },
+            { name: "โคลอมเบีย", flag: "🇨🇴", code: "co" },
+            { name: "ชิลี", flag: "🇨🇱", code: "cl" },
+            { name: "เปรู", flag: "🇵🇪", code: "pe" },
+            { name: "คิวบา", flag: "🇨🇺", code: "cu" },
+            { name: "โบลิเวีย", flag: "🇧🇴", code: "bo" },
+            { name: "เอกวาดอร์", flag: "🇪🇨", code: "ec" },
+            { name: "เวเนซุเอลา", flag: "🇻🇪", code: "ve" },
+            { name: "ปารากวัย", flag: "🇵🇾", code: "py" },
+            { name: "อุรุกวัย", flag: "🇺🇾", code: "uy" },
+            { name: "กายอานา", flag: "🇬🇾", code: "gy" },
+            { name: "ซูรินาม", flag: "🇸🇷", code: "sr" },
+            { name: "ปานามา", flag: "🇵🇦", code: "pa" },
+            { name: "คอสตาริกา", flag: "🇨🇷", code: "cr" },
+            { name: "นิการากัว", flag: "🇳🇮", code: "ni" },
+            { name: "ฮอนดูรัส", flag: "🇭🇳", code: "hn" },
+            { name: "เอลซัลวาดอร์", flag: "🇸🇻", code: "sv" },
+            { name: "กัวเตมาลา", flag: "🇬🇹", code: "gt" },
+            { name: "เบลีซ", flag: "🇧🇿", code: "bz" },
+            { name: "จาเมกา", flag: "🇯🇲", code: "jm" },
+            { name: "เฮติ", flag: "🇭🇹", code: "ht" },
+            { name: "โดมินิกัน", flag: "🇩🇴", code: "do" },
+            { name: "บาฮามาส", flag: "🇧🇸", code: "bs" },
+            { name: "บาร์เบโดส", flag: "🇧🇧", code: "bb" },
+            { name: "ตรินิแดด", flag: "🇹🇹", code: "tt" },
+            { name: "กรีเนดา", flag: "🇬🇩", code: "gd" },
+            { name: "เซนต์ลูเซีย", flag: "🇱🇨", code: "lc" },
+            { name: "เซนต์วินเซนต์", flag: "vc", code: "vc" },
+            { name: "แอนติกา", flag: "🇦🇬", code: "ag" },
+            { name: "เซนต์คิตส์", flag: "🇰🇳", code: "kn" },
+            { name: "โดมินิกา", flag: "🇩🇲", code: "dm" },
+          ],
+        },
+        โอเชียเนีย: {
+          emoji: "🌏",
+          color: "#55EFC4",
+          countries: [
+            { name: "ออสเตรเลีย", flag: "🇦🇺", code: "au" },
+            { name: "นิวซีแลนด์", flag: "🇳🇿", code: "nz" },
+            { name: "ฟิจิ", flag: "🇫🇯", code: "fj" },
+            { name: "ปาปัวนิวกินี", flag: "🇵🇬", code: "pg" },
+            { name: "ซามัว", flag: "🇼🇸", code: "ws" },
+            { name: "ตองกา", flag: "🇹🇴", code: "to" },
+            { name: "วานูอาตู", flag: "🇻🇺", code: "vu" },
+            { name: "หมู่เกาะโซโลมอน", flag: "🇸🇧", code: "sb" },
+            { name: "คิริบาส", flag: "🇰🇮", code: "ki" },
+            { name: "ปาเลา", flag: "🇵🇼", code: "pw" },
+            { name: "ไมโครนีเซีย", flag: "🇫🇲", code: "fm" },
+            { name: "มาร์แชลล์", flag: "🇲🇭", code: "mh" },
+            { name: "ตูวาลู", flag: "🇹🇻", code: "tv" },
+            { name: "นาอูรู", flag: "🇳🇷", code: "nr" },
+          ],
+        },
+      };
+
+      /* =============================================
+   FLAG CACHE
+============================================= */
+      const imgCache = {};
+      (function preload() {
+        const seen = new Set();
+        Object.values(CONTINENTS).forEach((c) =>
+          c.countries.forEach((cn) => {
+            if (!seen.has(cn.code)) {
+              seen.add(cn.code);
+              const i = new Image();
+              i.crossOrigin = "anonymous";
+              i.src = `https://flagcdn.com/w160/${cn.code}.png`;
+              imgCache[cn.code] = i;
+            }
+          }),
+        );
+      })();
+
+      /* =============================================
+   CANVAS
+============================================= */
+      const canvas = document.getElementById("gameCanvas");
+      const ctx = canvas.getContext("2d");
+      const GW = 480,
+        GH = 760;
+
+      function resize() {
+        const avW = window.innerWidth - 16;
+        const avH = window.innerHeight - 16;
+        /* ไม่ scale เกิน 1.0 เพื่อป้องกัน overflow บนจอใหญ่ */
+        const s = Math.min(avW / GW, avH / GH, 1.0);
+
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = GW * dpr;
+        canvas.height = GH * dpr;
+        canvas.style.width = Math.floor(GW * s) + "px";
+        canvas.style.height = Math.floor(GH * s) + "px";
+
+        ctx.resetTransform();
+        ctx.scale(dpr, dpr);
+      }
+      window.addEventListener("resize", resize);
+      setTimeout(resize, 60);
+
+      /* roundRect polyfill */
+      if (!CanvasRenderingContext2D.prototype.roundRect) {
+        CanvasRenderingContext2D.prototype.roundRect = function (
+          x,
+          y,
+          w,
+          h,
+          r,
+        ) {
+          r = Math.min(r, w / 2, h / 2);
+          this.beginPath();
+          this.moveTo(x + r, y);
+          this.arcTo(x + w, y, x + w, y + h, r);
+          this.arcTo(x + w, y + h, x, y + h, r);
+          this.arcTo(x, y + h, x, y, r);
+          this.arcTo(x, y, x + w, y, r);
+          this.closePath();
+          return this;
+        };
+      }
+
+      /* =============================================
+   AUDIO
+============================================= */
+      let aCtx = null;
+      let isMuted = localStorage.getItem("game_muted") === "true";
+
+      function updateMuteBtnUI() {
+        const btn = document.getElementById("muteBtn");
+        if (btn) {
+          btn.innerHTML = isMuted ? "🔇" : "🔊";
+        }
+      }
+
+      // Initialize UI on load
+      setTimeout(updateMuteBtnUI, 100);
+
+      window.toggleMute = function(e) {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        initAudio();
+        isMuted = !isMuted;
+        localStorage.setItem("game_muted", isMuted);
+        updateMuteBtnUI();
+        
+        // Update current BGM volumes
+        if (isMuted) {
+          titleBgm.volume = 0;
+          gameplayBgm.volume = 0;
+        } else {
+          titleBgm.volume = 0.25;
+          gameplayBgm.volume = 0.25;
+        }
+      };
+
+      function initAudio() {
+        if (!aCtx)
+          aCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (typeof gs !== 'undefined') {
+          if (gs === ST.TITLE || gs === ST.SELECT) {
+            playTitleBgm();
+          } else if (gs === ST.PLAYING) {
+            playGameplayBgm();
+          }
+        }
+      }
+      function tone(f, t, d, v = 0.25) {
+        if (isMuted) return; // Mute SFX
+        if (!aCtx) return;
+        const o = aCtx.createOscillator(),
+          g = aCtx.createGain();
+        o.connect(g);
+        g.connect(aCtx.destination);
+        o.type = t;
+        o.frequency.value = f;
+        g.gain.setValueAtTime(v, aCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, aCtx.currentTime + d);
+        o.start();
+        o.stop(aCtx.currentTime + d);
+      }
+      const SFX = {
+        shoot: () => tone(900, "square", 0.07, 0.1),
+        correct: () => {
+          tone(523, "sine", 0.1, 0.28);
+          setTimeout(() => tone(659, "sine", 0.1, 0.28), 85);
+          setTimeout(() => tone(784, "sine", 0.16, 0.28), 170);
+        },
+        wrong: () => {
+          tone(200, "sawtooth", 0.18, 0.28);
+          setTimeout(() => tone(140, "sawtooth", 0.22, 0.28), 130);
+        },
+        asteroid: () => tone(120, "sawtooth", 0.3, 0.35),
+        win: () =>
+          [523, 659, 784, 1047].forEach((f, i) =>
+            setTimeout(() => tone(f, "sine", 0.3, 0.4), i * 105),
+          ),
+        lose: () =>
+          [380, 280, 180].forEach((f, i) =>
+            setTimeout(() => tone(f, "sawtooth", 0.25, 0.35), i * 135),
+          ),
+      };
+
+      const titleBgm = new Audio('music/Longing for AIR.mp3');
+      titleBgm.loop = true;
+      titleBgm.volume = isMuted ? 0 : 0.25;
+
+      let isTitleBgmPlaying = false;
+      function playTitleBgm() {
+        titleBgm.volume = isMuted ? 0 : 0.25;
+        if (isTitleBgmPlaying) return;
+        titleBgm.play()
+          .then(() => { isTitleBgmPlaying = true; })
+          .catch(err => {
+            console.log("Audio autoplay blocked by browser, will play on user interaction");
+          });
+      }
+      function stopTitleBgm() {
+        titleBgm.pause();
+        isTitleBgmPlaying = false;
+      }
+
+      const gameplayBgm = new Audio('music/Super Mario Galaxy Soundtrack - Gusty Garden Galaxy.mp3');
+      gameplayBgm.loop = true;
+      gameplayBgm.volume = isMuted ? 0 : 0.25;
+
+      let isGameplayBgmPlaying = false;
+      function playGameplayBgm() {
+        gameplayBgm.volume = isMuted ? 0 : 0.25;
+        if (isGameplayBgmPlaying) return;
+        gameplayBgm.play()
+          .then(() => { isGameplayBgmPlaying = true; })
+          .catch(err => {
+            console.log("Gameplay Audio autoplay blocked by browser");
+          });
+      }
+      function stopGameplayBgm() {
+        gameplayBgm.pause();
+        gameplayBgm.currentTime = 0;
+        isGameplayBgmPlaying = false;
+      }
+
+      const ST = { TITLE: 0, SELECT: 1, PLAYING: 2, WIN: 3, LOSE: 4, SELECT2P: 5, PLAYING2P: 6, WIN2P: 7 };
+      let gs = ST.TITLE;
+
+      function setGameState(state) {
+        gs = state;
+        if (gs === ST.TITLE || gs === ST.SELECT) {
+          stopGameplayBgm();
+          playTitleBgm();
+        } else if (gs === ST.PLAYING) {
+          stopTitleBgm();
+          playGameplayBgm();
+        } else {
+          stopTitleBgm();
+          stopGameplayBgm();
+        }
+      }
+
+      const player = { x: GW / 2, y: GH - 122, w: 56, h: 50, spd: 5.5 };
+      let bullets = [],
+        balls = [],
+        particles = [],
+        stars = [],
+        decorBalls = [];
+
+      let continent = "",
+        tPool = [],
+        wPool = [],
+        tIdx = 0,
+        wIdx = 0;
+      let correctHits = 0,
+        wrongHits = 0,
+        shieldActive = false,
+        comboCount = 0;
+      const MAX_WRONG = 3,
+        TARGET = 10;
+      const GAME_TIME = 90000; // 90 seconds
+      let timeLeft = GAME_TIME;
+
+      let lastTime = 0,
+        elapsed = 0,
+        lastSpawn = 0,
+        lastFire = 0;
+      const FIRE_MS = 460;
+      const MAX_BALLS = 7;
+
+      let shakeAmt = 0,
+        celebT = 0;
+      const keys = {};
+      let isFiringRequested = false;
+
+      /* =============================================
+   2-PLAYER STATE
+============================================= */
+      const player2 = { x: GW / 2, y: GH - 122, w: 56, h: 50, spd: 5.5 };
+      let bullets2 = [];
+      let correctHits2 = 0, wrongHits2 = 0, shieldActive2 = false;
+      let isFiringRequested2 = false;
+      let lastFire2 = 0;
+      let winner2P = 0; // 1 or 2
+      let tPool2 = [], wPool2 = [], tIdx2 = 0, wIdx2 = 0;
+
+      /* =============================================
+   STARS
+============================================= */
+      function initStars() {
+        stars = Array.from({ length: 180 }, () => ({
+          x: Math.random() * GW,
+          y: Math.random() * GH,
+          r: Math.random() * 1.8 + 0.3,
+          spd: Math.random() * 0.4 + 0.08,
+          a: Math.random() * 0.6 + 0.3,
+          tw: Math.random() * Math.PI * 2,
+        }));
+      }
+      initStars();
+
+      /* =============================================
+   DECOR BALLS (title screen)
+============================================= */
+      function initDecorBalls() {
+        const all = [];
+        Object.values(CONTINENTS).forEach((c) => all.push(...c.countries));
+        decorBalls = Array.from({ length: 7 }, () => {
+          const c = all[~~(Math.random() * all.length)];
+          return {
+            x: rnd(40, GW - 40),
+            y: rnd(80, GH - 80),
+            r: rnd(20, 34),
+            vx: rnd(-0.25, 0.25),
+            vy: rnd(0.15, 0.4),
+            flag: c.flag,
+            code: c.code,
+            wb: Math.random() * Math.PI * 2,
+            wbS: 0.018,
+          };
+        });
+      }
+      initDecorBalls();
+
+      function updateDecorBalls(dt) {
+        decorBalls.forEach((b) => {
+          b.wb += b.wbS;
+          b.x += b.vx;
+          b.y += b.vy;
+          if (b.x < b.r) b.vx = Math.abs(b.vx);
+          if (b.x > GW - b.r) b.vx = -Math.abs(b.vx);
+          if (b.y > GH + b.r) {
+            b.y = -b.r;
+            b.x = rnd(40, GW - 40);
+          }
+        });
+      }
+
+      /* =============================================
+   INPUT
+============================================= */
+      let mouseX = 0,
+        mouseY = 0,
+        mouseTargetX = GW / 2;
+      function updateMousePos(clientX, clientY) {
+        const { sx, sy, rect } = getScaleFactors();
+        mouseX = (clientX - rect.left) * sx;
+        mouseY = (clientY - rect.top) * sy;
+      }
+
+      document.addEventListener("keydown", (e) => {
+        keys[e.code] = true;
+        if (
+          ["Space", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(
+            e.code,
+          )
+        )
+          e.preventDefault();
+        if (e.code === "Space") {
+          isFiringRequested = true;
+          if (gs !== ST.PLAYING && gs !== ST.PLAYING2P) handleAction();
+        }
+        if (e.code === "Enter") {
+          isFiringRequested2 = true;
+          if (gs === ST.PLAYING2P) { /* handled in update2P */ }
+          else if (gs !== ST.PLAYING) handleAction();
+        }
+      });
+      document.addEventListener("keyup", (e) => {
+        keys[e.code] = false;
+        if (e.code === "Space") isFiringRequested = false;
+        if (e.code === "Enter") isFiringRequested2 = false;
+      });
+
+      function handleAction() {
+        initAudio();
+        if (gs === ST.TITLE) setGameState(ST.SELECT);
+        else if (gs === ST.WIN || gs === ST.LOSE) setGameState(ST.SELECT);
+        else if (gs === ST.WIN2P) setGameState(ST.SELECT);
+      }
+
+      function getScaleFactors() {
+        const rect = canvas.getBoundingClientRect();
+        return { sx: GW / rect.width, sy: GH / rect.height, rect };
+      }
+
+      canvas.addEventListener("mousemove", (e) => {
+        updateMousePos(e.clientX, e.clientY);
+
+        if (gs === ST.PLAYING) {
+          canvas.style.cursor = "crosshair";
+          mouseTargetX = clamp(mouseX, player.w / 2, GW - player.w / 2);
+        } else {
+          let hover = false;
+          if (gs === ST.SELECT) {
+            for (const b of selBtns) {
+              if (
+                mouseX >= b.x &&
+                mouseX <= b.x + b.w &&
+                mouseY >= b.y &&
+                mouseY <= b.y + b.h
+              ) {
+                hover = true;
+                break;
+              }
+            }
+            const back = getBackBtnPos();
+            if (
+              mouseX >= back.x &&
+              mouseX <= back.x + back.w &&
+              mouseY >= back.y &&
+              mouseY <= back.y + back.h
+            ) {
+              hover = true;
+            }
+          } else if (gs === ST.TITLE) {
+            const bx = GW / 2 - 110,
+              by = 600,
+              bw = 220,
+              bh = 58;
+            if (
+              mouseX >= bx &&
+              mouseX <= bx + bw &&
+              mouseY >= by &&
+              mouseY <= by + bh
+            ) {
+              hover = true;
+            }
+          } else if (gs === ST.WIN || gs === ST.LOSE) {
+            hover = true;
+          }
+          canvas.style.cursor = hover ? "pointer" : "default";
+        }
+      });
+
+      canvas.addEventListener("mousedown", (e) => {
+        initAudio();
+        updateMousePos(e.clientX, e.clientY);
+        if (gs === ST.PLAYING) {
+          isFiringRequested = true;
+        } else if (gs === ST.SELECT) {
+          doSelectClick(mouseX, mouseY);
+        } else if (gs === ST.SELECT2P) {
+          doSelect2PClick(mouseX, mouseY);
+        } else {
+          if (gs === ST.TITLE) {
+            setGameState(ST.SELECT);
+          } else {
+            handleAction();
+          }
+        }
+      });
+
+      window.addEventListener("mouseup", () => {
+        isFiringRequested = false;
+      });
+
+      canvas.addEventListener(
+        "touchstart",
+        (e) => {
+          e.preventDefault();
+          initAudio();
+          const t = e.touches[0];
+          updateMousePos(t.clientX, t.clientY);
+          if (gs === ST.SELECT) {
+            doSelectClick(mouseX, mouseY);
+          } else if (gs === ST.SELECT2P) {
+            doSelect2PClick(mouseX, mouseY);
+          } else if (gs === ST.PLAYING) {
+            mouseTargetX = clamp(mouseX, player.w / 2, GW - player.w / 2);
+            isFiringRequested = true;
+          } else if (gs === ST.TITLE) {
+            const bx = GW / 2 - 110,
+              by = 600,
+              bw = 220,
+              bh = 58;
+            if (
+              mouseX >= bx &&
+              mouseX <= bx + bw &&
+              mouseY >= by &&
+              mouseY <= by + bh
+            ) {
+              setGameState(ST.SELECT);
+            } else {
+              setGameState(ST.SELECT);
+            }
+          } else {
+            handleAction();
+          }
+        },
+        { passive: false },
+      );
+
+      canvas.addEventListener(
+        "touchmove",
+        (e) => {
+          e.preventDefault();
+          const t = e.touches[0];
+          updateMousePos(t.clientX, t.clientY);
+          if (gs === ST.PLAYING) {
+            mouseTargetX = clamp(mouseX, player.w / 2, GW - player.w / 2);
+          }
+        },
+        { passive: false },
+      );
+
+      canvas.addEventListener(
+        "touchend",
+        (e) => {
+          e.preventDefault();
+          isFiringRequested = false;
+        },
+        { passive: false },
+      );
+
+      /* =============================================
+   SELECT BUTTONS
+============================================= */
+      function getBackBtnPos() {
+        return { x: GW / 2 - 80, y: 596, w: 160, h: 44 };
+      }
+
+      /* Battle Mode (2-Player) select button */
+      function get2PBtnPos() {
+        return { x: GW / 2 - 120, y: 536, w: 240, h: 48 };
+      }
+
+      let selBtns = [];
+      function buildSelBtns() {
+        selBtns = [];
+        const names = Object.keys(CONTINENTS);
+        const padX = 32,
+          gap = 16,
+          bH = 74;
+        const bW = Math.floor((GW - 2 * padX - gap) / 2); // 200
+        const startY = 260;
+
+        names.forEach((nm, i) => {
+          const row = Math.floor(i / 2);
+          const col = i % 2;
+          let x, y, w;
+          if (i === 4) {
+            w = bW;
+            x = Math.floor((GW - w) / 2);
+            y = startY + row * (bH + gap);
+          } else {
+            w = bW;
+            x = padX + col * (bW + gap);
+            y = startY + row * (bH + gap);
+          }
+          selBtns.push({ nm, x, y, w, h: bH });
+        });
+      }
+      buildSelBtns();
+
+      function doSelectClick(mx, my) {
+        const back = getBackBtnPos();
+        if (
+          mx >= back.x &&
+          mx <= back.x + back.w &&
+          my >= back.y &&
+          my <= back.y + back.h
+        ) {
+          setGameState(ST.TITLE);
+          return;
+        }
+        /* 2P Mode button */
+        const btn2p = get2PBtnPos();
+        if (mx >= btn2p.x && mx <= btn2p.x + btn2p.w && my >= btn2p.y && my <= btn2p.y + btn2p.h) {
+          setGameState(ST.SELECT2P);
+          return;
+        }
+        for (const b of selBtns)
+          if (mx >= b.x && mx <= b.x + b.w && my >= b.y && my <= b.y + b.h) {
+            startGame(b.nm);
+            return;
+          }
+      }
+
+      /* 2P continent select buttons */
+      let selBtns2P = [];
+      function buildSelBtns2P() {
+        selBtns2P = [];
+        const names = Object.keys(CONTINENTS);
+        const padX = 32, gap = 16, bH = 74;
+        const bW = Math.floor((GW - 2 * padX - gap) / 2);
+        const startY = 260;
+        names.forEach((nm, i) => {
+          const row = Math.floor(i / 2);
+          const col = i % 2;
+          let x, y, w;
+          if (i === 4) {
+            w = bW;
+            x = Math.floor((GW - w) / 2);
+            y = startY + row * (bH + gap);
+          } else {
+            w = bW;
+            x = padX + col * (bW + gap);
+            y = startY + row * (bH + gap);
+          }
+          selBtns2P.push({ nm, x, y, w, h: bH });
+        });
+      }
+      buildSelBtns2P();
+
+      function doSelect2PClick(mx, my) {
+        const back = { x: GW / 2 - 80, y: 560, w: 160, h: 44 };
+        if (mx >= back.x && mx <= back.x + back.w && my >= back.y && my <= back.y + back.h) {
+          setGameState(ST.SELECT);
+          return;
+        }
+        for (const b of selBtns2P)
+          if (mx >= b.x && mx <= b.x + b.w && my >= b.y && my <= b.y + b.h) {
+            startGame2P(b.nm);
+            return;
+          }
+      }
+
+      /* =============================================
+   UTILS
+============================================= */
+      function shuffle(a) {
+        const r = [...a];
+        for (let i = r.length - 1; i > 0; i--) {
+          const j = ~~(Math.random() * (i + 1));
+          [r[i], r[j]] = [r[j], r[i]];
+        }
+        return r;
+      }
+      function clamp(v, lo, hi) {
+        return Math.max(lo, Math.min(hi, v));
+      }
+      function rnd(lo, hi) {
+        return lo + Math.random() * (hi - lo);
+      }
+
+      /* =============================================
+   DIFFICULTY
+============================================= */
+      function getSpawnMs() {
+        return Math.max(750, 2000 - Math.floor(correctHits / 3) * 170);
+      }
+      function getSpdMult() {
+        return 1 + clamp(correctHits / TARGET, 0, 1) * 0.85;
+      }
+
+      /* =============================================
+   GAME LOGIC
+============================================= */
+      function startGame(name) {
+        continent = name;
+        setGameState(ST.PLAYING);
+        tPool = shuffle(CONTINENTS[name].countries);
+        wPool = [];
+        Object.entries(CONTINENTS).forEach(([k, v]) => {
+          if (k !== name) wPool.push(...v.countries);
+        });
+        wPool = shuffle(wPool);
+        bullets = [];
+        balls = [];
+        particles = [];
+        correctHits = 0;
+        wrongHits = 0;
+        shieldActive = false;
+        comboCount = 0;
+        tIdx = 0;
+        wIdx = 0;
+        elapsed = 0;
+        lastSpawn = -9999;
+        lastFire = 0;
+        timeLeft = GAME_TIME;
+        shakeAmt = 0;
+        celebT = 0;
+        player.x = GW / 2;
+        for (let i = 0; i < 3; i++) spawnBall(-i * 210);
+      }
+
+      function startGame2P(name) {
+        continent = name;
+        setGameState(ST.PLAYING2P);
+        tPool = shuffle(CONTINENTS[name].countries);
+        tPool2 = shuffle(CONTINENTS[name].countries);
+        wPool = [];
+        wPool2 = [];
+        Object.entries(CONTINENTS).forEach(([k, v]) => {
+          if (k !== name) { wPool.push(...v.countries); wPool2.push(...v.countries); }
+        });
+        wPool = shuffle(wPool);
+        wPool2 = shuffle(wPool2);
+        bullets = []; bullets2 = [];
+        balls = [];
+        particles = [];
+        correctHits = 0; correctHits2 = 0;
+        wrongHits = 0; wrongHits2 = 0;
+        shieldActive = false; shieldActive2 = false;
+        comboCount = 0;
+        tIdx = 0; tIdx2 = 0;
+        wIdx = 0; wIdx2 = 0;
+        elapsed = 0;
+        lastSpawn = -9999;
+        lastFire = 0; lastFire2 = 0;
+        timeLeft = GAME_TIME;
+        shakeAmt = 0;
+        celebT = 0;
+        winner2P = 0;
+        player.x = GW / 4;       // P1 fire – left side
+        player2.x = (GW * 3) / 4; // P2 water – right side
+        for (let i = 0; i < 3; i++) spawnBall(-i * 210);
+      }
+
+      const BCOLORS = [
+        "#FF6B9D",
+        "#C77DFF",
+        "#4CC9F0",
+        "#F9C74F",
+        "#90BE6D",
+        "#F8961E",
+        "#43AA8B",
+        "#FF8FA3",
+        "#9BF6FF",
+        "#A0C4FF",
+      ];
+
+      function spawnBall(yOff = 0) {
+        if (balls.filter((b) => b.alive).length >= MAX_BALLS) return;
+        const mult = getSpdMult();
+
+        // Helper to find a non-overlapping X coordinate
+        function getSafeX(ballRadius, margin) {
+          let bestX = rnd(ballRadius + margin, GW - ballRadius - margin);
+          let bestScore = -99999;
+          
+          for (let attempt = 0; attempt < 25; attempt++) {
+            const candidateX = rnd(ballRadius + margin, GW - ballRadius - margin);
+            let score = 99999;
+            
+            balls.forEach(ob => {
+              if (!ob.alive) return;
+              // Compare with balls in the upper 60% of the screen
+              if (ob.y < GH * 0.6) {
+                const dx = Math.abs(candidateX - ob.x);
+                const dy = Math.abs(-ballRadius - ob.y);
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < score) {
+                  score = dist;
+                }
+                // Heavy penalty for vertical alignment (falling in similar lanes)
+                const minLaneWidth = (ballRadius + ob.r) * 2.2;
+                if (dx < minLaneWidth) {
+                  score -= (minLaneWidth - dx) * 4.0;
+                }
+              }
+            });
+            
+            if (score > bestScore) {
+              bestScore = score;
+              bestX = candidateX;
+            }
+          }
+          return bestX;
+        }
+
+        /* ── Asteroid (obstacle) ── */
+        if (Math.random() < 0.18 && correctHits >= 2) {
+          const r = 30;
+          const startX = getSafeX(r, 15);
+          balls.push({
+            x: startX,
+            y: -r + yOff,
+            r,
+            spd: rnd(1.6, 2.6) * mult,
+            isAsteroid: true,
+            alive: true,
+            wb: 0,
+            wbS: 0,
+            hasDrift: false,
+            // pre-generate crater offsets
+            craters: [
+              { ox: rnd(-0.35, -0.1), oy: rnd(-0.35, -0.1), s: 0.22 },
+              { ox: rnd(0.1, 0.3), oy: rnd(0.1, 0.35), s: 0.16 },
+              { ox: rnd(0.05, 0.2), oy: rnd(-0.25, -0.05), s: 0.1 },
+            ],
+          });
+          return;
+        }
+
+        /* ── Power-up (item) ── */
+        if (Math.random() < 0.14) {
+          const r = 26;
+          const startX = getSafeX(r, 15);
+          const types = ["shield", "time", "heart"];
+          const type = types[~~(Math.random() * types.length)];
+          const emojis = { shield: "🛡️", time: "⏱️", heart: "❤️" };
+          const colors = { shield: "#A78BFA", time: "#38BDF8", heart: "#FF3B30" };
+          balls.push({
+            x: startX,
+            y: -r + yOff,
+            r,
+            spd: rnd(1.8, 2.8) * mult,
+            isAsteroid: false,
+            isPowerup: true,
+            powerupType: type,
+            emoji: emojis[type],
+            color: colors[type],
+            alive: true,
+            wb: 0,
+            wbS: 0.015,
+            hasDrift: false,
+          });
+          return;
+        }
+
+        /* ── Country ball ── */
+        const r = 36;
+        const ok = Math.random() < 0.54;
+        let entry;
+        if (ok) {
+          entry = { ...tPool[tIdx % tPool.length], ok: true };
+          tIdx++;
+        } else {
+          entry = { ...wPool[wIdx % wPool.length], ok: false };
+          wIdx++;
+        }
+
+        const hasDrift = correctHits >= 3 && Math.random() < 0.32;
+        const startX = getSafeX(r, 18);
+
+        /* ── Feature 7: Turbo flag (speed freak!) ── */
+        const isTurbo = Math.random() < 0.12; // 12% chance
+        const baseSpd = isTurbo ? rnd(4.5, 6.5) * mult : rnd(0.9, 1.65) * mult;
+
+        balls.push({
+          x: startX,
+          y: -r + yOff,
+          r,
+          startX,
+          spd: baseSpd,
+          flag: entry.flag,
+          code: entry.code,
+          name: entry.name,
+          ok: entry.ok,
+          isAsteroid: false,
+          alive: true,
+          color: BCOLORS[~~(Math.random() * BCOLORS.length)],
+          wb: Math.random() * Math.PI * 2,
+          wbS: rnd(0.018, 0.034),
+          hasDrift,
+          driftAmp: hasDrift ? rnd(28, 58) : 0,
+          driftFreq: hasDrift ? rnd(0.0018, 0.0036) : 0,
+          driftPhase: Math.random() * Math.PI * 2,
+          isTurbo,
+          trailParticles: isTurbo ? [] : null,
+        });
+      }
+
+      function fireNow() {
+        const now = Date.now();
+        if (now - lastFire < FIRE_MS) return;
+        lastFire = now;
+        bullets.push({ x: player.x, y: player.y - player.h / 2, vx: 0, vy: -14, owner: 1 });
+        SFX.shoot();
+      }
+
+      function fireNow2() {
+        const now = Date.now();
+        if (now - lastFire2 < FIRE_MS) return;
+        lastFire2 = now;
+        bullets2.push({ x: player2.x, y: player2.y - player2.h / 2, vx: 0, vy: -14, owner: 2 });
+        SFX.shoot();
+      }
+
+      function boom(x, y, ok, isAsteroid = false) {
+        const clrs = isAsteroid
+          ? ["#FF8844", "#FF4400", "#FFD700", "#888"]
+          : ok
+            ? ["#00FF88", "#4CC9F0", "#FFF", "#A8FF78"]
+            : ["#FF5555", "#FF8C00", "#FFD700", "#FFF"];
+        for (let i = 0; i < 28; i++) {
+          const a = Math.random() * Math.PI * 2,
+            sp = rnd(1.5, 6.5);
+          particles.push({
+            x,
+            y,
+            vx: Math.cos(a) * sp,
+            vy: Math.sin(a) * sp,
+            life: 1,
+            dec: 0.022 + Math.random() * 0.018,
+            r: rnd(3, 8),
+            color: clrs[~~(Math.random() * clrs.length)],
+            txt: false,
+          });
+        }
+        const lbl = isAsteroid ? "💥 ดาวตก!" : ok ? "✓ ถูก!" : "✗ ผิดทวีป!";
+        const col = isAsteroid ? "#FF8844" : ok ? "#00FF88" : "#FF5555";
+        particles.push({
+          x,
+          y: y - 12,
+          vx: 0,
+          vy: -1.7,
+          life: 1,
+          dec: 0.011,
+          r: 0,
+          color: col,
+          txt: true,
+          label: lbl,
+        });
+      }
+
+      function spawnTextParticle(x, y, label, color) {
+        particles.push({
+          x,
+          y: y - 12,
+          vx: 0,
+          vy: -1.8,
+          life: 1.0,
+          dec: 0.012,
+          r: 0,
+          color: color || "#FFD700",
+          txt: true,
+          label: label,
+        });
+      }
+
+      /* =============================================
+   UPDATE
+============================================= */
+      function activatePowerup(type, x, y) {
+        initAudio();
+        tone(700, "sine", 0.1, 0.2);
+        setTimeout(() => tone(900, "sine", 0.12, 0.25), 80);
+
+        if (type === "shield") {
+          shieldActive = true;
+          boom(x, y, true);
+          spawnTextParticle(x, y, "เกราะป้องกัน! 🛡️", "#A78BFA");
+        } else if (type === "time") {
+          timeLeft = Math.min(GAME_TIME, timeLeft + 10000);
+          boom(x, y, true);
+          spawnTextParticle(x, y, "+10 วินาที! ⏱️", "#38BDF8");
+        } else if (type === "heart") {
+          const recovered = wrongHits > 0;
+          wrongHits = Math.max(0, wrongHits - 1);
+          boom(x, y, true);
+          if (recovered) {
+            spawnTextParticle(x, y, "เพิ่มหัวใจ! ❤️", "#FF3B30");
+          } else {
+            spawnTextParticle(x, y, "หัวใจเต็มแล้ว! ❤️", "#FF8FA3");
+          }
+        }
+      }
+
+      function update(dt) {
+        if (gs === ST.PLAYING2P) { update2P(dt); return; }
+        if (gs !== ST.PLAYING) return;
+        elapsed += dt;
+        timeLeft -= dt;
+
+        /* Timer out */
+        if (timeLeft <= 0) {
+          timeLeft = 0;
+          setGameState(ST.LOSE);
+          SFX.lose();
+          return;
+        }
+
+        /* Player – 1P uses both WASD and arrows */
+        if (keys["ArrowLeft"] || keys["KeyA"]) player.x -= player.spd;
+        if (keys["ArrowRight"] || keys["KeyD"]) player.x += player.spd;
+        player.x = clamp(player.x, player.w / 2, GW - player.w / 2);
+
+        /* Auto-fire ตลอดเวลา */
+        fireNow();
+
+        /* ยานตาม mouse/touch แบบ smooth lerp – ไม่วาป */
+        if (!keys["ArrowLeft"] && !keys["KeyA"] && !keys["ArrowRight"] && !keys["KeyD"]) {
+          player.x += (mouseTargetX - player.x) * 0.18;
+        }
+
+
+        /* Spawn */
+        if (elapsed - lastSpawn >= getSpawnMs()) {
+          spawnBall();
+          lastSpawn = elapsed;
+        }
+
+        /* Bullets */
+        bullets = bullets.filter((b) => b.y > -10 && b.x > -10 && b.x < GW + 10);
+        bullets.forEach((b) => {
+          b.x += b.vx || 0;
+          b.y += b.vy;
+        });
+
+        /* Balls */
+        balls.forEach((b) => {
+          if (!b.alive) return;
+          b.wb += b.wbS;
+          b.y += b.spd;
+          if (b.hasDrift)
+            b.x = clamp(
+              b.startX +
+                Math.sin(elapsed * b.driftFreq + b.driftPhase) * b.driftAmp,
+              b.r + 5,
+              GW - b.r - 5,
+            );
+          /* Turbo trail particles */
+          if (b.isTurbo && b.alive && b.trailParticles !== null) {
+            const tclrs = ["#FF6600", "#FF9900", "#FFCC00", "#FF3300"];
+            particles.push({
+              x: b.x + rnd(-6, 6),
+              y: b.y - b.r * 0.5,
+              vx: rnd(-0.5, 0.5),
+              vy: rnd(-0.3, 0.8),
+              life: 0.65,
+              dec: 0.05,
+              r: rnd(3, 7),
+              color: tclrs[~~(Math.random() * tclrs.length)],
+              txt: false,
+            });
+          }
+
+          /* Collision check between asteroid and player spaceship */
+          if (b.isAsteroid && b.alive) {
+            const closestX = clamp(b.x, player.x - player.w / 2, player.x + player.w / 2);
+            const closestY = clamp(b.y, player.y - player.h / 2, player.y + player.h / 2);
+            const dx = b.x - closestX;
+            const dy = b.y - closestY;
+            if (dx * dx + dy * dy < b.r * b.r) {
+              b.alive = false;
+              if (shieldActive) {
+                shieldActive = false;
+                boom(b.x, b.y, true, true);
+                spawnTextParticle(player.x, player.y - 45, "ป้องกัน! 🛡️", "#A78BFA");
+                tone(400, "sine", 0.15, 0.3);
+              } else {
+                boom(b.x, b.y, false, true); // Explode asteroid
+                boom(player.x, player.y, false); // Explode player ship
+                shakeAmt = 26;
+                SFX.lose();
+                setGameState(ST.LOSE);
+              }
+            }
+          }
+        });
+        balls = balls.filter((b) => b.alive && b.y < GH + b.r + 30);
+
+        /* Collisions */
+        outer: for (let bi = bullets.length - 1; bi >= 0; bi--) {
+          const bul = bullets[bi];
+          for (let ci = balls.length - 1; ci >= 0; ci--) {
+            const ball = balls[ci];
+            if (!ball.alive) continue;
+            const dx = bul.x - ball.x,
+              dy = bul.y - ball.y;
+            if (dx * dx + dy * dy < ball.r * ball.r) {
+              ball.alive = false;
+              bullets.splice(bi, 1);
+              if (ball.isAsteroid) {
+                if (shieldActive) {
+                  shieldActive = false;
+                  boom(ball.x, ball.y, true);
+                  spawnTextParticle(player.x, player.y - 45, "ป้องกัน! 🛡️", "#A78BFA");
+                  tone(400, "sine", 0.15, 0.3);
+                } else {
+                  comboCount = 0;
+                  wrongHits++;
+                  boom(ball.x, ball.y, false, true);
+                  SFX.asteroid();
+                  shakeAmt = 14;
+                  if (wrongHits >= MAX_WRONG) {
+                    setGameState(ST.LOSE);
+                    SFX.lose();
+                  }
+                }
+              } else if (ball.isPowerup) {
+                activatePowerup(ball.powerupType, ball.x, ball.y);
+              } else if (ball.ok) {
+                correctHits++;
+                comboCount++;
+                boom(ball.x, ball.y, true);
+                SFX.correct();
+                
+                // Show combo praise
+                if (comboCount >= 2) {
+                  const praises = ["เก่งมาก!", "สุดยอด!", "เจ๋งสุดๆ!", "ว้าว!", "อัจฉริยะ!"];
+                  const praise = praises[~~(Math.random() * praises.length)] + ` x${comboCount} 🔥`;
+                  spawnTextParticle(ball.x, ball.y - 45, praise, "#FACC15");
+                }
+                
+                if (correctHits >= TARGET) {
+                  setGameState(ST.WIN);
+                  SFX.win();
+                  celebT = 0;
+                  
+                  // Save best time
+                  const timeSpent = Math.ceil((GAME_TIME - timeLeft) / 1000);
+                  const key = "high_score_" + continent;
+                  const best = localStorage.getItem(key);
+                  if (!best || timeSpent < parseInt(best)) {
+                    localStorage.setItem(key, timeSpent);
+                    spawnTextParticle(player.x, player.y - 40, "สถิติใหม่! 🏆", "#FFD700");
+                  }
+                }
+              } else {
+                if (shieldActive) {
+                  shieldActive = false;
+                  boom(ball.x, ball.y, true);
+                  spawnTextParticle(player.x, player.y - 45, "ป้องกัน! 🛡️", "#A78BFA");
+                  tone(400, "sine", 0.15, 0.3);
+                } else {
+                  comboCount = 0;
+                  wrongHits++;
+                  boom(ball.x, ball.y, false);
+                  SFX.wrong();
+                  shakeAmt = 12;
+                  if (wrongHits >= MAX_WRONG) {
+                    setGameState(ST.LOSE);
+                    SFX.lose();
+                  }
+                }
+              }
+              continue outer;
+            }
+          }
+        }
+
+        /* Particles */
+        particles.forEach((p) => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.life -= p.dec;
+        });
+        particles = particles.filter((p) => p.life > 0);
+
+        /* Stars */
+        stars.forEach((s) => {
+          s.y += s.spd;
+          s.tw += 0.05;
+          if (s.y > GH) s.y = -2;
+        });
+
+        /* Win confetti */
+        if (gs === ST.WIN) {
+          celebT += dt;
+          if (Math.random() < 0.38) {
+            const cc = ["#FFD700", "#FF6B9D", "#4CC9F0", "#90BE6D", "#C77DFF"];
+            particles.push({
+              x: Math.random() * GW,
+              y: 0,
+              vx: rnd(-1.5, 1.5),
+              vy: rnd(1.5, 3.8),
+              life: 1,
+              dec: 0.006,
+              r: rnd(5, 11),
+              color: cc[~~(Math.random() * cc.length)],
+              txt: false,
+            });
+          }
+        }
+      }
+
+      /* =============================================
+   UPDATE 2P
+============================================= */
+      function update2P(dt) {
+        elapsed += dt;
+        timeLeft -= dt;
+        if (timeLeft <= 0) {
+          timeLeft = 0;
+          winner2P = correctHits >= correctHits2 ? 1 : 2;
+          setGameState(ST.WIN2P);
+          SFX.win();
+          return;
+        }
+
+        /* P1 – WASD + Space */
+        if (keys["KeyA"]) player.x -= player.spd;
+        if (keys["KeyD"]) player.x += player.spd;
+        player.x = clamp(player.x, player.w / 2, GW / 2 - player.w / 2 - 4);
+        fireNow();
+
+        /* P2 – Arrow keys + Enter */
+        if (keys["ArrowLeft"]) player2.x -= player2.spd;
+        if (keys["ArrowRight"]) player2.x += player2.spd;
+        player2.x = clamp(player2.x, GW / 2 + player2.w / 2 + 4, GW - player2.w / 2);
+        fireNow2();
+
+        /* Spawn */
+        if (elapsed - lastSpawn >= getSpawnMs()) {
+          spawnBall();
+          lastSpawn = elapsed;
+        }
+
+        /* Bullets P1 */
+        bullets = bullets.filter((b) => b.y > -10);
+        bullets.forEach((b) => { b.x += b.vx || 0; b.y += b.vy; });
+
+        /* Bullets P2 */
+        bullets2 = bullets2.filter((b) => b.y > -10);
+        bullets2.forEach((b) => { b.x += b.vx || 0; b.y += b.vy; });
+
+        /* Balls move */
+        balls.forEach((b) => {
+          if (!b.alive) return;
+          b.wb += b.wbS;
+          b.y += b.spd;
+          if (b.hasDrift)
+            b.x = clamp(
+              b.startX + Math.sin(elapsed * b.driftFreq + b.driftPhase) * b.driftAmp,
+              b.r + 5, GW - b.r - 5
+            );
+          if (b.isTurbo && b.trailParticles !== null) {
+            const tclrs = ["#FF6600", "#FF9900", "#FFCC00", "#FF3300"];
+            particles.push({
+              x: b.x + rnd(-6, 6), y: b.y - b.r * 0.5,
+              vx: rnd(-0.5, 0.5), vy: rnd(-0.3, 0.8),
+              life: 0.65, dec: 0.05, r: rnd(3, 7),
+              color: tclrs[~~(Math.random() * tclrs.length)], txt: false,
+            });
+          }
+        });
+        balls = balls.filter((b) => b.alive && b.y < GH + b.r + 30);
+
+        /* Collision P1 bullets */
+        outer1: for (let bi = bullets.length - 1; bi >= 0; bi--) {
+          const bul = bullets[bi];
+          for (let ci = balls.length - 1; ci >= 0; ci--) {
+            const ball = balls[ci];
+            if (!ball.alive) continue;
+            const dx = bul.x - ball.x, dy = bul.y - ball.y;
+            if (dx * dx + dy * dy < ball.r * ball.r) {
+              ball.alive = false;
+              bullets.splice(bi, 1);
+              if (ball.isAsteroid) {
+                boom(ball.x, ball.y, false, true);
+                SFX.asteroid();
+                shakeAmt = 14;
+                wrongHits++;
+                if (wrongHits >= MAX_WRONG) {
+                  winner2P = 2;
+                  setGameState(ST.WIN2P);
+                  SFX.win(); return;
+                }
+              } else if (ball.isPowerup) {
+                activatePowerup(ball.powerupType, ball.x, ball.y);
+              } else if (ball.ok) {
+                correctHits++;
+                boom(ball.x, ball.y, true);
+                SFX.correct();
+                if (correctHits >= TARGET) {
+                  winner2P = 1;
+                  setGameState(ST.WIN2P);
+                  SFX.win(); return;
+                }
+              } else {
+                wrongHits++;
+                boom(ball.x, ball.y, false);
+                SFX.wrong();
+                shakeAmt = 10;
+                if (wrongHits >= MAX_WRONG) {
+                  winner2P = 2;
+                  setGameState(ST.WIN2P);
+                  SFX.win(); return;
+                }
+              }
+              continue outer1;
+            }
+          }
+        }
+
+        /* Collision P2 bullets */
+        outer2: for (let bi = bullets2.length - 1; bi >= 0; bi--) {
+          const bul = bullets2[bi];
+          for (let ci = balls.length - 1; ci >= 0; ci--) {
+            const ball = balls[ci];
+            if (!ball.alive) continue;
+            const dx = bul.x - ball.x, dy = bul.y - ball.y;
+            if (dx * dx + dy * dy < ball.r * ball.r) {
+              ball.alive = false;
+              bullets2.splice(bi, 1);
+              if (ball.isAsteroid) {
+                boom(ball.x, ball.y, false, true);
+                SFX.asteroid();
+                shakeAmt = 14;
+                wrongHits2++;
+                if (wrongHits2 >= MAX_WRONG) {
+                  winner2P = 1;
+                  setGameState(ST.WIN2P);
+                  SFX.win(); return;
+                }
+              } else if (ball.isPowerup) {
+                activatePowerup(ball.powerupType, ball.x, ball.y);
+              } else if (ball.ok) {
+                correctHits2++;
+                boom(ball.x, ball.y, true);
+                SFX.correct();
+                if (correctHits2 >= TARGET) {
+                  winner2P = 2;
+                  setGameState(ST.WIN2P);
+                  SFX.win(); return;
+                }
+              } else {
+                wrongHits2++;
+                boom(ball.x, ball.y, false);
+                SFX.wrong();
+                shakeAmt = 10;
+                if (wrongHits2 >= MAX_WRONG) {
+                  winner2P = 1;
+                  setGameState(ST.WIN2P);
+                  SFX.win(); return;
+                }
+              }
+              continue outer2;
+            }
+          }
+        }
+
+        /* Particles */
+        particles.forEach((p) => { p.x += p.vx; p.y += p.vy; p.life -= p.dec; });
+        particles = particles.filter((p) => p.life > 0);
+
+        /* Stars */
+        stars.forEach((s) => { s.y += s.spd; s.tw += 0.05; if (s.y > GH) s.y = -2; });
+      }
+
+      /* Vector heart drawing helper */
+      function drawHeart(cx, cy, w, h, filled) {
+        ctx.save();
+        if (filled) {
+          ctx.shadowColor = "#FF3366";
+          ctx.shadowBlur = 8;
+          ctx.fillStyle = "#FF3B30";
+        } else {
+          ctx.fillStyle = "rgba(255,255,255,0.08)";
+          ctx.strokeStyle = "rgba(255,255,255,0.3)";
+          ctx.lineWidth = 1.5;
+        }
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - h / 4);
+        ctx.bezierCurveTo(
+          cx - w / 2,
+          cy - h,
+          cx - w,
+          cy - h / 3,
+          cx,
+          cy + h / 2,
+        );
+        ctx.bezierCurveTo(
+          cx + w,
+          cy - h / 3,
+          cx + w / 2,
+          cy - h,
+          cx,
+          cy - h / 4,
+        );
+        ctx.closePath();
+        ctx.fill();
+        if (!filled) ctx.stroke();
+        ctx.restore();
+      }
+
+      /* =============================================
+   DRAW HELPERS
+============================================= */
+      function drawBg() {
+        const g = ctx.createLinearGradient(0, 0, 0, GH);
+        g.addColorStop(0, "#030318");
+        g.addColorStop(0.55, "#060626");
+        g.addColorStop(1, "#0b0a32");
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, GW, GH);
+        ctx.save();
+        ctx.globalAlpha = 0.06;
+        ctx.fillStyle = "#4CC9F0";
+        ctx.beginPath();
+        ctx.ellipse(70, 210, 130, 85, 0.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#7B2FBE";
+        ctx.beginPath();
+        ctx.ellipse(400, 520, 105, 150, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        stars.forEach((s) => {
+          const a = s.a * (0.65 + 0.35 * Math.sin(s.tw));
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255,255,255,${a})`;
+          ctx.fill();
+        });
+      }
+
+      function drawGlobe(cx, cy, r, t) {
+        ctx.save();
+        ctx.shadowColor = "#4CC9F0";
+        ctx.shadowBlur = 35;
+        const og = ctx.createRadialGradient(
+          cx - r * 0.25,
+          cy - r * 0.25,
+          r * 0.05,
+          cx,
+          cy,
+          r,
+        );
+        og.addColorStop(0, "#5DE0FA");
+        og.addColorStop(0.4, "#1E88E5");
+        og.addColorStop(1, "#0D47A1");
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = og;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        /* Land masses with rotation */
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.clip();
+        ctx.translate(cx, cy);
+        ctx.rotate(t * 0.00012);
+        ctx.fillStyle = "rgba(76,175,80,.72)";
+        [
+          [0.08, -0.28, 0.4, 0.26, 0.25],
+          [-0.3, 0.18, 0.22, 0.34, -0.1],
+          [0.22, 0.32, 0.19, 0.28, 0.5],
+          [-0.1, -0.4, 0.27, 0.17, -0.35],
+          [0.42, 0.08, 0.12, 0.3, 0.1],
+        ].forEach(([ex, ey, rx2, ry2, ang]) => {
+          ctx.beginPath();
+          ctx.ellipse(r * ex, r * ey, r * rx2, r * ry2, ang, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        ctx.restore();
+        /* Atmosphere */
+        const atmo = ctx.createRadialGradient(
+          cx,
+          cy,
+          r * 0.88,
+          cx,
+          cy,
+          r * 1.18,
+        );
+        atmo.addColorStop(0, "rgba(76,201,240,.18)");
+        atmo.addColorStop(1, "transparent");
+        ctx.beginPath();
+        ctx.arc(cx, cy, r * 1.18, 0, Math.PI * 2);
+        ctx.fillStyle = atmo;
+        ctx.fill();
+        /* Shine */
+        ctx.fillStyle = "rgba(255,255,255,.22)";
+        ctx.beginPath();
+        ctx.ellipse(
+          cx - r * 0.27,
+          cy - r * 0.3,
+          r * 0.38,
+          r * 0.2,
+          -0.5,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawDecorBall(b) {
+        const cx = b.x + Math.sin(b.wb) * 2.5,
+          cy = b.y,
+          r = b.r;
+        ctx.save();
+        ctx.globalAlpha = 0.22;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = "#EEE";
+        ctx.fill();
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, r - 0.5, 0, Math.PI * 2);
+        ctx.clip();
+        const img = imgCache[b.code];
+        if (img && img.complete && img.naturalWidth > 0) {
+          const sc = Math.max(
+            (r * 2) / img.naturalWidth,
+            (r * 2) / img.naturalHeight,
+          );
+          ctx.drawImage(
+            img,
+            cx - (img.naturalWidth * sc) / 2,
+            cy - (img.naturalHeight * sc) / 2,
+            img.naturalWidth * sc,
+            img.naturalHeight * sc,
+          );
+        } else {
+          ctx.font = `${Math.floor(r * 1.6)}px serif`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(b.flag, cx, cy);
+        }
+        ctx.restore();
+        ctx.strokeStyle = "rgba(255,255,255,.5)";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function drawPowerup(b) {
+        const cx = b.x, cy = b.y, r = b.r;
+        ctx.save();
+        ctx.shadowColor = b.color;
+        ctx.shadowBlur = 16;
+        ctx.fillStyle = "rgba(12, 12, 42, 0.9)";
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = b.color;
+        ctx.lineWidth = 3.5;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.font = `${Math.floor(r * 1.15)}px serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(b.emoji, cx, cy);
+        const gl = ctx.createRadialGradient(cx, cy - r * 0.3, 0, cx, cy, r);
+        gl.addColorStop(0, "rgba(255, 255, 255, 0.36)");
+        gl.addColorStop(0.5, "rgba(255, 255, 255, 0.05)");
+        gl.addColorStop(1, "transparent");
+        ctx.fillStyle = gl;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawBall(b) {
+        if (b.isAsteroid) {
+          drawAsteroid(b);
+          return;
+        }
+        if (b.isPowerup) {
+          drawPowerup(b);
+          return;
+        }
+        const cx = b.x + Math.sin(b.wb) * 2.5,
+          cy = b.y,
+          r = b.r;
+        /* Feature 7: turbo glow ring */
+        if (b.isTurbo) {
+          ctx.save();
+          const pulse = 0.55 + 0.45 * Math.sin(Date.now() * 0.018);
+          ctx.shadowColor = "#FF6600";
+          ctx.shadowBlur = 22 * pulse;
+          ctx.strokeStyle = `rgba(255,120,0,${0.7 * pulse})`;
+          ctx.lineWidth = 3.5;
+          ctx.beginPath();
+          ctx.arc(cx, cy, r + 5, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        }
+        ctx.save();
+        ctx.shadowColor = "rgba(0,0,0,.5)";
+        ctx.shadowBlur = 12;
+        ctx.shadowOffsetY = 4;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = "#E8E8E8";
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetY = 0;
+        /* Flag */
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, r - 0.5, 0, Math.PI * 2);
+        ctx.clip();
+        const img = imgCache[b.code];
+        if (img && img.complete && img.naturalWidth > 0) {
+          const sc = Math.max(
+            (r * 2) / img.naturalWidth,
+            (r * 2) / img.naturalHeight,
+          );
+          ctx.drawImage(
+            img,
+            cx - (img.naturalWidth * sc) / 2,
+            cy - (img.naturalHeight * sc) / 2,
+            img.naturalWidth * sc,
+            img.naturalHeight * sc,
+          );
+        } else {
+          ctx.font = `${Math.floor(r * 1.7)}px serif`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(b.flag, cx, cy);
+        }
+        ctx.restore();
+        /* Gloss */
+        const gl = ctx.createRadialGradient(
+          cx,
+          cy - r * 0.38,
+          0,
+          cx,
+          cy - r * 0.08,
+          r * 0.9,
+        );
+        gl.addColorStop(0, "rgba(255,255,255,.36)");
+        gl.addColorStop(0.5, "rgba(255,255,255,.06)");
+        gl.addColorStop(1, "rgba(0,0,0,.06)");
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = gl;
+        ctx.fill();
+        /* Border */
+        ctx.strokeStyle = "rgba(255,255,255,.85)";
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = "rgba(255,255,255,.4)";
+        ctx.shadowBlur = 6;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        /* Drift indicator */
+        if (b.hasDrift) {
+          ctx.font = "11px Kanit";
+          ctx.textAlign = "right";
+          ctx.fillStyle = "rgba(255,220,0,.85)";
+          ctx.fillText("↔", cx + r - 2, cy - r + 12);
+        }
+        /* Turbo indicator */
+        if (b.isTurbo) {
+          ctx.font = "bold 11px Kanit";
+          ctx.textAlign = "left";
+          ctx.fillStyle = "#FF6600";
+          ctx.shadowColor = "#FF6600";
+          ctx.shadowBlur = 6;
+          ctx.fillText("⚡", cx - r + 2, cy - r + 12);
+          ctx.shadowBlur = 0;
+        }
+        ctx.restore();
+        /* Label pill */
+        ctx.save();
+        let fz = Math.floor(r * 0.3);
+        if (b.name.length > 7) fz = Math.floor(r * 0.23);
+        fz = Math.max(fz, 11);
+        ctx.font = `bold ${fz}px Kanit`;
+        const tw = ctx.measureText(b.name).width;
+        const ph = 9,
+          pv = 4,
+          lw = tw + ph * 2,
+          lh = fz + pv * 2 + 2,
+          lx = cx - lw / 2,
+          ly = cy + r + 6;
+        ctx.shadowColor = "rgba(0,0,0,.5)";
+        ctx.shadowBlur = 6;
+        ctx.shadowOffsetY = 2;
+        ctx.fillStyle = b.isTurbo ? "rgba(60,20,0,.88)" : "rgba(8,8,32,.82)";
+        ctx.beginPath();
+        ctx.roundRect(lx, ly, lw, lh, lh / 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetY = 0;
+        ctx.strokeStyle = b.isTurbo ? "rgba(255,120,0,.35)" : "rgba(255,255,255,.15)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.fillStyle = b.isTurbo ? "#FFCC88" : "#FFF";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(b.name, cx, ly + lh / 2);
+        ctx.restore();
+      }
+
+      function drawAsteroid(b) {
+        const cx = b.x,
+          cy = b.y,
+          r = b.r;
+        ctx.save();
+        ctx.shadowColor = "#FF4422";
+        ctx.shadowBlur = 20;
+        const gr = ctx.createRadialGradient(
+          cx - r * 0.2,
+          cy - r * 0.2,
+          1,
+          cx,
+          cy,
+          r,
+        );
+        gr.addColorStop(0, "#999");
+        gr.addColorStop(0.5, "#666");
+        gr.addColorStop(1, "#2A2A2A");
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = gr;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        /* Craters */
+        ctx.fillStyle = "rgba(0,0,0,.4)";
+        (b.craters || []).forEach((c) => {
+          ctx.beginPath();
+          ctx.arc(cx + r * c.ox, cy + r * c.oy, r * c.s, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        /* Red border */
+        ctx.strokeStyle = "#FF6644";
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+        /* Warning label */
+        ctx.save();
+        ctx.font = "bold 12px Kanit";
+        ctx.fillStyle = "#FF9966";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.shadowColor = "#000";
+        ctx.shadowBlur = 5;
+        ctx.fillText("⚠️ หลบด้วย!", cx, cy + r + 16);
+        ctx.restore();
+      }
+
+      function drawBullet(b) {
+        ctx.save();
+        const g = ctx.createLinearGradient(b.x, b.y - 22, b.x, b.y);
+        g.addColorStop(0, "#FFF");
+        g.addColorStop(0.5, "#4CC9F0");
+        g.addColorStop(1, "transparent");
+        ctx.shadowColor = "#4CC9F0";
+        ctx.shadowBlur = 14;
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.roundRect(b.x - 3, b.y - 22, 6, 22, 3);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      /* Draw player2 (water/blue teal ship, mirrored) */
+      function drawPlayer2() {
+        const { x, y, w, h } = player2;
+        ctx.save();
+        /* Exhaust */
+        const fl = 18 + 8 * Math.sin(Date.now() * 0.08 + 1);
+        const eg = ctx.createLinearGradient(x, y, x, y + fl + 14);
+        eg.addColorStop(0, "rgba(0,200,255,.85)");
+        eg.addColorStop(0.5, "rgba(0,120,220,.45)");
+        eg.addColorStop(1, "transparent");
+        ctx.fillStyle = eg;
+        ctx.beginPath();
+        ctx.moveTo(x - 11, y + 2);
+        ctx.lineTo(x + 11, y + 2);
+        ctx.lineTo(x + 4, y + fl + 9);
+        ctx.lineTo(x, y + fl + 14);
+        ctx.lineTo(x - 4, y + fl + 9);
+        ctx.closePath();
+        ctx.fill();
+        /* Wings */
+        [
+          [x - 15, x - 10, x - 14],
+          [x + 10, x + 20, x + 14],
+        ].forEach(([a, b2, m]) => {
+          const fl2 = 10 + 5 * Math.sin(Date.now() * 0.13 + 2);
+          const eg2 = ctx.createLinearGradient(m, y, m, y + fl2 + 8);
+          eg2.addColorStop(0, "rgba(0,220,255,.7)");
+          eg2.addColorStop(1, "transparent");
+          ctx.fillStyle = eg2;
+          ctx.beginPath();
+          ctx.moveTo(a, y + 3);
+          ctx.lineTo(b2, y + 3);
+          ctx.lineTo(m, y + fl2 + 8);
+          ctx.closePath();
+          ctx.fill();
+        });
+        ctx.shadowColor = "#00E5FF";
+        ctx.shadowBlur = 22;
+        ctx.fillStyle = "#006080";
+        ctx.beginPath();
+        ctx.moveTo(x - w / 2, y + 6);
+        ctx.lineTo(x - w * 0.24, y - h * 0.18);
+        ctx.lineTo(x - w * 0.19, y + 6);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(x + w / 2, y + 6);
+        ctx.lineTo(x + w * 0.24, y - h * 0.18);
+        ctx.lineTo(x + w * 0.19, y + 6);
+        ctx.closePath();
+        ctx.fill();
+        const bg = ctx.createLinearGradient(x - w * 0.22, y - h, x + w * 0.22, y);
+        bg.addColorStop(0, "#80FFEE");
+        bg.addColorStop(0.5, "#00BCD4");
+        bg.addColorStop(1, "#00838F");
+        ctx.fillStyle = bg;
+        ctx.beginPath();
+        ctx.moveTo(x, y - h);
+        ctx.bezierCurveTo(x + w * 0.28, y - h * 0.68, x + w * 0.28, y - h * 0.3, x + w * 0.19, y + 6);
+        ctx.lineTo(x - w * 0.19, y + 6);
+        ctx.bezierCurveTo(x - w * 0.28, y - h * 0.3, x - w * 0.28, y - h * 0.68, x, y - h);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "rgba(180,255,255,.55)";
+        ctx.beginPath();
+        ctx.ellipse(x, y - h * 0.48, w * 0.12, h * 0.24, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(100,255,255,.45)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x, y - h);
+        ctx.lineTo(x, y + 6);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.restore();
+        /* P2 label */
+        ctx.save();
+        ctx.font = "bold 11px Kanit";
+        ctx.fillStyle = "#00E5FF";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.shadowColor = "#00E5FF";
+        ctx.shadowBlur = 8;
+        ctx.fillText("P2", x, y - h - 10);
+        ctx.restore();
+      }
+
+      function drawPlayer() {
+        const { x, y, w, h } = player;
+        ctx.save();
+        /* Exhaust */
+        const fl = 18 + 8 * Math.sin(Date.now() * 0.08);
+        const eg = ctx.createLinearGradient(x, y, x, y + fl + 14);
+        eg.addColorStop(0, "rgba(255,140,0,.85)");
+        eg.addColorStop(0.5, "rgba(255,60,0,.45)");
+        eg.addColorStop(1, "transparent");
+        ctx.fillStyle = eg;
+        ctx.beginPath();
+        ctx.moveTo(x - 11, y + 2);
+        ctx.lineTo(x + 11, y + 2);
+        ctx.lineTo(x + 4, y + fl + 9);
+        ctx.lineTo(x, y + fl + 14);
+        ctx.lineTo(x - 4, y + fl + 9);
+        ctx.closePath();
+        ctx.fill();
+        [
+          [x - 15, x - 10, x - 14],
+          [x + 10, x + 20, x + 14],
+        ].forEach(([a, b2, m]) => {
+          const fl2 = 10 + 5 * Math.sin(Date.now() * 0.13 + 1.2);
+          const eg2 = ctx.createLinearGradient(m, y, m, y + fl2 + 8);
+          eg2.addColorStop(0, "rgba(255,200,0,.7)");
+          eg2.addColorStop(1, "transparent");
+          ctx.fillStyle = eg2;
+          ctx.beginPath();
+          ctx.moveTo(a, y + 3);
+          ctx.lineTo(b2, y + 3);
+          ctx.lineTo(m, y + fl2 + 8);
+          ctx.closePath();
+          ctx.fill();
+        });
+        ctx.shadowColor = "#4CC9F0";
+        ctx.shadowBlur = 22;
+        ctx.fillStyle = "#1a6fa8";
+        ctx.beginPath();
+        ctx.moveTo(x - w / 2, y + 6);
+        ctx.lineTo(x - w * 0.24, y - h * 0.18);
+        ctx.lineTo(x - w * 0.19, y + 6);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(x + w / 2, y + 6);
+        ctx.lineTo(x + w * 0.24, y - h * 0.18);
+        ctx.lineTo(x + w * 0.19, y + 6);
+        ctx.closePath();
+        ctx.fill();
+        const bg = ctx.createLinearGradient(
+          x - w * 0.22,
+          y - h,
+          x + w * 0.22,
+          y,
+        );
+        bg.addColorStop(0, "#5AC8FA");
+        bg.addColorStop(0.5, "#2196F3");
+        bg.addColorStop(1, "#1565C0");
+        ctx.fillStyle = bg;
+        ctx.beginPath();
+        ctx.moveTo(x, y - h);
+        ctx.bezierCurveTo(
+          x + w * 0.28,
+          y - h * 0.68,
+          x + w * 0.28,
+          y - h * 0.3,
+          x + w * 0.19,
+          y + 6,
+        );
+        ctx.lineTo(x - w * 0.19, y + 6);
+        ctx.bezierCurveTo(
+          x - w * 0.28,
+          y - h * 0.3,
+          x - w * 0.28,
+          y - h * 0.68,
+          x,
+          y - h,
+        );
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "rgba(200,240,255,.55)";
+        ctx.beginPath();
+        ctx.ellipse(x, y - h * 0.48, w * 0.12, h * 0.24, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(100,210,255,.45)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x, y - h);
+        ctx.lineTo(x, y + 6);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.restore();
+
+        if (shieldActive) {
+          ctx.save();
+          ctx.strokeStyle = "rgba(167, 139, 250, 0.85)";
+          ctx.lineWidth = 3.5;
+          ctx.shadowColor = "#A78BFA";
+          ctx.shadowBlur = 12;
+          ctx.beginPath();
+          ctx.arc(x, y - h / 2 + 5, w * 0.72, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.fillStyle = "rgba(167, 139, 250, 0.1)";
+          ctx.fill();
+          ctx.restore();
+        }
+        /* P1 label */
+        ctx.save();
+        if (gs === ST.PLAYING2P) {
+          ctx.font = "bold 11px Kanit";
+          ctx.fillStyle = "#FF6600";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.shadowColor = "#FF6600";
+          ctx.shadowBlur = 8;
+          ctx.fillText("P1", x, y - h - 10);
+        }
+        ctx.restore();
+      }
+
+      function drawParticles() {
+        particles.forEach((p) => {
+          ctx.save();
+          ctx.globalAlpha = Math.max(0, p.life);
+          if (p.txt) {
+            ctx.font = "bold 19px Kanit";
+            ctx.fillStyle = p.color;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.shadowColor = p.color;
+            ctx.shadowBlur = 12;
+            ctx.fillText(p.label, p.x, p.y);
+          } else {
+            ctx.fillStyle = p.color;
+            ctx.shadowColor = p.color;
+            ctx.shadowBlur = 8;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, Math.max(0.5, p.r * p.life), 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.restore();
+        });
+      }
+
+      function drawHUD2P() {
+        const co = CONTINENTS[continent];
+        /* Top bar */
+        ctx.fillStyle = "rgba(3,3,24,.88)";
+        ctx.fillRect(0, 0, GW, 68);
+        ctx.save();
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = "bold 18px Kanit";
+        ctx.fillStyle = "#FFF";
+        ctx.shadowColor = co.color;
+        ctx.shadowBlur = 14;
+        ctx.fillText(`${co.emoji} 2 ผู้เล่น – ทวีป${continent}`, GW / 2, 24);
+        ctx.shadowBlur = 0;
+        /* Timer */
+        const secs = Math.ceil(timeLeft / 1000);
+        const mm = String(~~(secs / 60)).padStart(2, "0");
+        const ss = String(secs % 60).padStart(2, "0");
+        const timerColor = timeLeft < 15000 ? `rgba(255,80,80,1)` : "#A0DDFF";
+        ctx.font = "bold 18px Kanit";
+        ctx.fillStyle = timerColor;
+        ctx.textAlign = "right";
+        ctx.fillText(`⏱️ ${mm}:${ss}`, GW - 14, 50);
+        ctx.restore();
+        /* Timer bar */
+        const tg = ctx.createLinearGradient(0, 0, GW, 0);
+        tg.addColorStop(0, "#FF6600"); tg.addColorStop(0.5, "#FFD700"); tg.addColorStop(1, "#00E5FF");
+        ctx.fillStyle = tg;
+        ctx.fillRect(0, 68, Math.max(0, GW * (timeLeft / GAME_TIME)), 3);
+
+        /* Divider line */
+        ctx.save();
+        ctx.strokeStyle = "rgba(255,255,255,0.15)";
+        ctx.lineWidth = 1;
+        ctx.setLineDash([6, 4]);
+        ctx.beginPath();
+        ctx.moveTo(GW / 2, 72);
+        ctx.lineTo(GW / 2, GH);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+
+        /* P1 score card (bottom-left) */
+        ctx.save();
+        ctx.fillStyle = "rgba(12,6,2,.88)";
+        ctx.beginPath();
+        ctx.roundRect(10, GH - 88, GW / 2 - 16, 78, 14);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255,100,0,.25)";
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.font = "bold 13px Kanit";
+        ctx.fillStyle = "#FF6600";
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
+        ctx.shadowColor = "#FF6600";
+        ctx.shadowBlur = 6;
+        ctx.fillText("P1", 22, GH - 75);
+        ctx.shadowBlur = 0;
+        /* P1 progress bar */
+        const p1Prog = clamp(correctHits / TARGET, 0, 1);
+        ctx.fillStyle = "rgba(255,255,255,0.07)";
+        ctx.beginPath();
+        ctx.roundRect(22, GH - 58, GW / 2 - 36, 10, 5);
+        ctx.fill();
+        if (p1Prog > 0) {
+          const pg1 = ctx.createLinearGradient(22, 0, 22 + (GW / 2 - 36), 0);
+          pg1.addColorStop(0, "#FF6600"); pg1.addColorStop(1, "#FFD700");
+          ctx.fillStyle = pg1;
+          ctx.shadowColor = "#FF6600"; ctx.shadowBlur = 6;
+          ctx.beginPath();
+          ctx.roundRect(22, GH - 58, Math.max(10, (GW / 2 - 36) * p1Prog), 10, 5);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+        ctx.font = "bold 14px Kanit";
+        ctx.fillStyle = "#FFD700";
+        ctx.textAlign = "left";
+        ctx.fillText(`${correctHits} / ${TARGET} ✓`, 22, GH - 38);
+        /* P1 hearts */
+        for (let i = 0; i < MAX_WRONG; i++) {
+          drawHeart(GW / 2 - 22 - i * 18, GH - 38, 10, 10, i < MAX_WRONG - wrongHits);
+        }
+        ctx.restore();
+
+        /* P2 score card (bottom-right) */
+        ctx.save();
+        ctx.fillStyle = "rgba(2,8,14,.88)";
+        ctx.beginPath();
+        ctx.roundRect(GW / 2 + 6, GH - 88, GW / 2 - 16, 78, 14);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(0,180,255,.25)";
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.font = "bold 13px Kanit";
+        ctx.fillStyle = "#00E5FF";
+        ctx.textAlign = "right";
+        ctx.textBaseline = "middle";
+        ctx.shadowColor = "#00E5FF";
+        ctx.shadowBlur = 6;
+        ctx.fillText("P2", GW - 22, GH - 75);
+        ctx.shadowBlur = 0;
+        /* P2 progress bar */
+        const p2Prog = clamp(correctHits2 / TARGET, 0, 1);
+        ctx.fillStyle = "rgba(255,255,255,0.07)";
+        ctx.beginPath();
+        ctx.roundRect(GW / 2 + 16, GH - 58, GW / 2 - 36, 10, 5);
+        ctx.fill();
+        if (p2Prog > 0) {
+          const pg2 = ctx.createLinearGradient(GW / 2 + 16, 0, GW / 2 + 16 + (GW / 2 - 36), 0);
+          pg2.addColorStop(0, "#00B0FF"); pg2.addColorStop(1, "#00E5FF");
+          ctx.fillStyle = pg2;
+          ctx.shadowColor = "#00E5FF"; ctx.shadowBlur = 6;
+          ctx.beginPath();
+          ctx.roundRect(GW / 2 + 16, GH - 58, Math.max(10, (GW / 2 - 36) * p2Prog), 10, 5);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+        ctx.font = "bold 14px Kanit";
+        ctx.fillStyle = "#00E5FF";
+        ctx.textAlign = "right";
+        ctx.fillText(`${correctHits2} / ${TARGET} ✓`, GW - 22, GH - 38);
+        /* P2 hearts */
+        for (let i = 0; i < MAX_WRONG; i++) {
+          ctx.save();
+          ctx.shadowColor = i < MAX_WRONG - wrongHits2 ? "#00E5FF" : "transparent";
+          ctx.shadowBlur = i < MAX_WRONG - wrongHits2 ? 6 : 0;
+          drawHeart(GW / 2 + 20 + i * 18, GH - 38, 10, 10, i < MAX_WRONG - wrongHits2);
+          ctx.restore();
+        }
+        ctx.restore();
+      }
+
+      function drawHUD() {
+        const co = CONTINENTS[continent];
+        /* Top bar */
+        ctx.fillStyle = "rgba(3,3,24,.88)";
+        ctx.fillRect(0, 0, GW, 68);
+        ctx.save();
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = "bold 20px Kanit";
+        ctx.fillStyle = "#FFF";
+        ctx.shadowColor = co.color;
+        ctx.shadowBlur = 16;
+        ctx.fillText(`${co.emoji} ค้นหาประเทศในทวีป${continent}!`, GW / 2, 32);
+        ctx.shadowBlur = 0;
+        /* Timer */
+        const secs = Math.ceil(timeLeft / 1000);
+        const mm = String(~~(secs / 60)).padStart(2, "0");
+        const ss = String(secs % 60).padStart(2, "0");
+        const timerColor =
+          timeLeft < 15000
+            ? `rgba(255,${~~((timeLeft / 15000) * 80 + 80)},80,1)`
+            : "#A0DDFF";
+        if (timeLeft < 15000 && ~~(Date.now() / 300) % 2 === 0)
+          ctx.fillStyle = "rgba(255,80,80,.18)";
+        else ctx.fillStyle = "transparent";
+        ctx.fillRect(0, 0, GW, 68);
+        ctx.font = "bold 22px Kanit";
+        ctx.fillStyle = timerColor;
+        ctx.textAlign = "right";
+        ctx.textBaseline = "middle";
+        ctx.shadowColor = timerColor;
+        ctx.shadowBlur = 10;
+        ctx.fillText(`⏱️ ${mm}:${ss}`, GW - 14, 34);
+        ctx.shadowBlur = 0;
+        ctx.restore();
+        /* Timer bar */
+        const tbx = 0,
+          tby = 68,
+          tbw = GW * (timeLeft / GAME_TIME),
+          tbh = 3;
+        const tg = ctx.createLinearGradient(0, 0, GW, 0);
+        tg.addColorStop(0, "#00FF88");
+        tg.addColorStop(0.5, "#4CC9F0");
+        tg.addColorStop(1, timeLeft < 20000 ? "#FF4444" : "#A0DDFF");
+        ctx.fillStyle = tg;
+        ctx.fillRect(tbx, tby, Math.max(0, tbw), tbh);
+
+        /* Floating Glass HUD panel container */
+        ctx.save();
+        ctx.shadowColor = "rgba(0, 0, 0, 0.45)";
+        ctx.shadowBlur = 12;
+        ctx.shadowOffsetY = 2;
+        const hudG = ctx.createLinearGradient(16, GH - 100, 16, GH - 16);
+        hudG.addColorStop(0, "rgba(12, 12, 42, 0.88)");
+        hudG.addColorStop(1, "rgba(6, 6, 24, 0.95)");
+        ctx.fillStyle = hudG;
+        ctx.beginPath();
+        ctx.roundRect(16, GH - 100, GW - 32, 84, 18);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.restore();
+
+        /* Progress bar inside HUD card */
+        const bx = 34,
+          by = GH - 88,
+          bw = GW - 68,
+          bh = 14;
+        ctx.fillStyle = "rgba(255, 255, 255, 0.06)";
+        ctx.beginPath();
+        ctx.roundRect(bx, by, bw, bh, 7);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        const prog = clamp(correctHits / TARGET, 0, 1);
+        if (prog > 0) {
+          ctx.save();
+          const pg = ctx.createLinearGradient(bx, 0, bx + bw, 0);
+          pg.addColorStop(0, "#00FF88");
+          pg.addColorStop(1, "#4CC9F0");
+          ctx.fillStyle = pg;
+          ctx.shadowColor = "#00FF88";
+          ctx.shadowBlur = 8;
+          ctx.beginPath();
+          ctx.roundRect(bx, by, Math.max(bh, bw * prog), bh, 7);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        /* Progress Label Text */
+        ctx.save();
+        ctx.font = "bold 12px Kanit";
+        ctx.fillStyle = "#A0C4FF";
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
+        ctx.fillText("ความก้าวหน้า", bx + 2, by - 6);
+        ctx.textAlign = "right";
+        ctx.fillText(`${correctHits} / ${TARGET}`, bx + bw - 2, by - 6);
+        ctx.restore();
+
+        /* Hearts (Health) drawn with vector graphics */
+        const heartW = 14,
+          heartH = 14;
+        const hx = GW - 36;
+        const hy = GH - 38;
+        for (let i = 0; i < MAX_WRONG; i++) {
+          const isFilled = i < MAX_WRONG - wrongHits;
+          const cxLoc = hx - 8 - i * 22;
+          drawHeart(cxLoc, hy, heartW, heartH, isFilled);
+        }
+
+        /* Wrong counter label */
+        ctx.save();
+        ctx.font = "12px Kanit";
+        ctx.fillStyle = "#FF8FA3";
+        ctx.textAlign = "right";
+        ctx.textBaseline = "middle";
+        ctx.fillText(`ผิด: ${wrongHits}/${MAX_WRONG}`, hx - 72, hy);
+        ctx.restore();
+
+        /* Difficulty / Rating */
+        ctx.save();
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
+        ctx.font = "13px Kanit";
+        ctx.fillStyle = "#E2E8F0";
+        ctx.fillText("ระดับ:", 34, hy);
+
+        const lvl = Math.min(5, 1 + Math.floor(correctHits / 2));
+        const starStr = "★".repeat(lvl) + "☆".repeat(5 - lvl);
+        ctx.font = "14px Kanit";
+        ctx.fillStyle = "#FFD700";
+        ctx.shadowColor = "#FFD700";
+        ctx.shadowBlur = 6;
+        ctx.fillText(starStr, 72, hy);
+        ctx.restore();
+      }
+
+      /* =============================================
+   TITLE SCREEN
+============================================= */
+      function drawTitle(ts) {
+        /* Floating decor balls in background */
+        decorBalls.forEach((b) => drawDecorBall(b));
+
+        /* Outer Atmosphere/Glow Layer for Globe */
+        ctx.save();
+        const cx = GW / 2,
+          cy = 160,
+          r = 85;
+        const atmoGlow = ctx.createRadialGradient(
+          cx,
+          cy,
+          r - 5,
+          cx,
+          cy,
+          r + 45,
+        );
+        atmoGlow.addColorStop(0, "rgba(76, 201, 240, 0.3)");
+        atmoGlow.addColorStop(0.5, "rgba(114, 9, 183, 0.12)");
+        atmoGlow.addColorStop(1, "transparent");
+        ctx.beginPath();
+        ctx.arc(cx, cy, r + 45, 0, Math.PI * 2);
+        ctx.fillStyle = atmoGlow;
+        ctx.fill();
+        ctx.restore();
+
+        /* Orbit Ring */
+        ctx.save();
+        ctx.translate(GW / 2, 160);
+        ctx.rotate(-0.2);
+        ctx.strokeStyle = "rgba(76, 201, 240, 0.38)";
+        ctx.lineWidth = 3;
+        ctx.shadowColor = "#4CC9F0";
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 130, 30, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+
+        /* Earth globe */
+        drawGlobe(GW / 2, 160, 85, ts);
+
+        /* Title (Neon style) */
+        ctx.save();
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = "900 46px Kanit";
+        ctx.shadowColor = "#4CC9F0";
+        ctx.shadowBlur = 24;
+
+        const titleG = ctx.createLinearGradient(0, 295, 0, 361);
+        titleG.addColorStop(0, "#FFFFFF");
+        titleG.addColorStop(0.4, "#E0F7FA");
+        titleG.addColorStop(1, "#4CC9F0");
+
+        ctx.fillStyle = titleG;
+        ctx.fillText("🚀 ยานจิ๋วท่องทวีป", GW / 2, 328);
+        ctx.restore();
+
+        /* Subtitle */
+        ctx.save();
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = "bold 18px Kanit";
+        const alphaVal = 0.75 + 0.25 * Math.sin(Date.now() / 300);
+        ctx.fillStyle = `rgba(160, 196, 255, ${alphaVal})`;
+        ctx.fillText("เกมภูมิศาสตร์มหาสนุกสำหรับเด็กๆ", GW / 2, 362);
+        ctx.restore();
+
+        /* Glassmorphic Rules Box (Darkened for readability) */
+        ctx.save();
+        ctx.shadowColor = "rgba(0, 0, 0, 0.55)";
+        ctx.shadowBlur = 20;
+
+        const rulesG = ctx.createLinearGradient(32, 390, 32, 590);
+        rulesG.addColorStop(0, "rgba(12, 12, 42, 0.88)");
+        rulesG.addColorStop(1, "rgba(6, 6, 24, 0.95)");
+        ctx.fillStyle = rulesG;
+        ctx.beginPath();
+        ctx.roundRect(32, 390, GW - 64, 200, 18);
+        ctx.fill();
+
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.restore();
+
+        /* Rules Box Header */
+        ctx.save();
+        ctx.font = "bold 15px Kanit";
+        ctx.fillStyle = "#FFD700";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.shadowColor = "#FFD700";
+        ctx.shadowBlur = 6;
+        ctx.fillText("🎯 กฎกติกาสามดวงดาว", GW / 2, 424);
+        ctx.restore();
+
+        /* Rules Bullet Points */
+        ctx.save();
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "#E2E8F0";
+
+        const feats = [
+          { ico: "🌏", tx: "ยิงลูกบอลประเทศในทวีปที่กำหนดให้ถูก 10 ประเทศ" },
+          {
+            ico: "⏱️",
+            tx: "มีเวลา 90 วินาที – ยิงผิดทวีปหรือชนดาวตกหักพลังชีวิต",
+          },
+          {
+            ico: "☄️",
+            tx: "ระวังดาวตกแดง! และลูกบอลประเทศบางดวงที่จะส่ายไปมา",
+          },
+          {
+            ico: "⚡",
+            tx: "ระวังธงเร็วผิดปกติ! (มีไฟสีส้มกะพริบ) ต้องมือไวมาก!",
+          },
+          {
+            ico: "⚔️",
+            tx: "โหมด Battle: เล่น 2 คน แข่งกันยิงธงให้ได้ 10 ก่อน!",
+          },
+        ];
+
+        feats.forEach((f, i) => {
+          const sy = 448 + i * 28;
+          ctx.font = "16px serif";
+          ctx.fillText(f.ico, 48, sy);
+          ctx.font = "12.5px Kanit";
+          ctx.fillText(f.tx, 80, sy);
+        });
+        ctx.restore();
+
+        /* PLAY Button (Glowing capsules with hover scaling) */
+        const bx = GW / 2 - 110,
+          by = 618,
+          bw = 220,
+          bh = 58;
+        const pp = 0.85 + 0.15 * Math.sin(Date.now() / 200);
+        const hover =
+          mouseX >= bx &&
+          mouseX <= bx + bw &&
+          mouseY >= by &&
+          mouseY <= by + bh;
+        const scale = hover ? 1.05 : 1.0;
+
+        ctx.save();
+        ctx.translate(GW / 2, by + bh / 2);
+        ctx.scale(scale, scale);
+        ctx.shadowColor = "#4CC9F0";
+        ctx.shadowBlur = (hover ? 30 : 22) * pp;
+
+        const btnG = ctx.createLinearGradient(-bw / 2, -bh / 2, bw / 2, bh / 2);
+        btnG.addColorStop(0, hover ? "#00FFDD" : "#00F2FE");
+        btnG.addColorStop(1, hover ? "#00F2FE" : "#4FACFE");
+        ctx.fillStyle = btnG;
+
+        ctx.beginPath();
+        ctx.roundRect(-bw / 2, -bh / 2, bw, bh, bh / 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        /* White gloss reflection line */
+        ctx.fillStyle = "rgba(255, 255, 255, 0.22)";
+        ctx.beginPath();
+        ctx.roundRect(-bw / 2, -bh / 2, bw, bh / 2, bh / 2);
+        ctx.fill();
+
+        /* Button Border Highlight */
+        ctx.strokeStyle = hover
+          ? "rgba(255, 255, 255, 0.6)"
+          : "rgba(255, 255, 255, 0.4)";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.roundRect(-bw / 2, -bh / 2, bw, bh, bh / 2);
+        ctx.stroke();
+
+        /* Start Text */
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = "bold 22px Kanit";
+        ctx.fillStyle = "#FFFFFF";
+        ctx.shadowColor = "rgba(0, 0, 0, 0.35)";
+        ctx.shadowBlur = 4;
+        ctx.fillText("🎮  เริ่มเล่นเลย!", 0, 0);
+        ctx.restore();
+
+        /* Tap Hint */
+        ctx.save();
+        const ap = 0.5 + 0.5 * Math.sin(Date.now() / 450);
+        ctx.fillStyle = `rgba(160, 196, 255, ${ap})`;
+        ctx.font = "14px Kanit";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("หรือแตะตรงไหนก็ได้บนจอเพื่อเริ่ม", GW / 2, 706);
+        ctx.restore();
+      }
+
+      /* =============================================
+   SELECT 2P SCREEN
+============================================= */
+      function drawSelect2P() {
+        ctx.fillStyle = "rgba(5,5,30,.72)";
+        ctx.beginPath();
+        ctx.roundRect(24, 120, GW - 48, GH - 200, 20);
+        ctx.fill();
+        ctx.save();
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = "bold 30px Kanit";
+        ctx.fillStyle = "#FFF";
+        /* battle gradient title */
+        const tg2p = ctx.createLinearGradient(0, 170, GW, 210);
+        tg2p.addColorStop(0, "#C77DFF");
+        tg2p.addColorStop(0.5, "#4CC9F0");
+        tg2p.addColorStop(1, "#FF6B9D");
+        ctx.fillStyle = tg2p;
+        ctx.shadowColor = "#C77DFF";
+        ctx.shadowBlur = 16;
+        ctx.fillText("⚔️ Battle Mode – 2 ผู้เล่น", GW / 2, 185);
+        ctx.shadowBlur = 0;
+        ctx.font = "15px Kanit";
+        ctx.fillStyle = "#A0C4FF";
+        ctx.fillText("เลือกทวีปที่ต้องการแข่งกัน", GW / 2, 218);
+        ctx.font = "bold 12px Kanit";
+        ctx.fillStyle = "#FFD700";
+        ctx.fillText("🕹️ P1: A/D เคลื่อน (ยิงอัตโนมัติ)", GW / 2, 238);
+        ctx.fillStyle = "#A0C4FF";
+        ctx.fillText("🕹️ P2: ←/→ เคลื่อน (ยิงอัตโนมัติ)", GW / 2, 254);
+
+        selBtns2P.forEach((b) => {
+          const co = CONTINENTS[b.nm];
+          const hover =
+            mouseX >= b.x && mouseX <= b.x + b.w &&
+            mouseY >= b.y && mouseY <= b.y + b.h;
+          const scale = hover ? 1.04 : 1.0;
+          ctx.save();
+          ctx.translate(b.x + b.w / 2, b.y + b.h / 2);
+          ctx.scale(scale, scale);
+          ctx.shadowColor = co.color;
+          ctx.shadowBlur = hover ? 24 : 16;
+          const g = ctx.createLinearGradient(-b.w / 2, -b.h / 2, b.w / 2, b.h / 2);
+          g.addColorStop(0, co.color + (hover ? "EE" : "CC"));
+          g.addColorStop(1, co.color + (hover ? "77" : "55"));
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.roundRect(-b.w / 2, -b.h / 2, b.w, b.h, 16);
+          ctx.fill();
+          ctx.strokeStyle = hover ? "rgba(255,255,255,.5)" : "rgba(255,255,255,.28)";
+          ctx.lineWidth = hover ? 2.0 : 1.5;
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+          ctx.textBaseline = "middle";
+          ctx.textAlign = "center";
+          ctx.font = "bold 18px Kanit";
+          ctx.fillStyle = "#FFF";
+          ctx.fillText(`${co.emoji}  ${b.nm}`, 0, -8);
+          ctx.font = "12px Kanit";
+          ctx.fillStyle = "rgba(255,255,255,.65)";
+          ctx.fillText(`${co.countries.length} ประเทศ`, 0, 12);
+          ctx.restore();
+        });
+
+        /* Back button */
+        const back = { x: GW / 2 - 80, y: 560, w: 160, h: 44 };
+        const backH = mouseX >= back.x && mouseX <= back.x + back.w && mouseY >= back.y && mouseY <= back.y + back.h;
+        ctx.save();
+        ctx.fillStyle = backH ? "rgba(255,255,255,.14)" : "rgba(255,255,255,.06)";
+        ctx.beginPath();
+        ctx.roundRect(back.x, back.y, back.w, back.h, back.h / 2);
+        ctx.fill();
+        ctx.strokeStyle = backH ? "rgba(255,255,255,.4)" : "rgba(255,255,255,.15)";
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+        ctx.font = "bold 15px Kanit";
+        ctx.fillStyle = backH ? "#FFF" : "#A0C4FF";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("← กลับ", GW / 2, back.y + back.h / 2);
+        ctx.restore();
+
+        ctx.restore();
+      }
+
+      /* =============================================
+   SELECT SCREEN
+============================================= */
+      function drawSelect() {
+        /* Semi-transparent panel – ขยายให้รองรับปุ่ม Battle + Back */
+        ctx.fillStyle = "rgba(5,5,30,.72)";
+        ctx.beginPath();
+        ctx.roundRect(24, 120, GW - 48, GH - 140, 20);
+        ctx.fill();
+        ctx.save();
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = "bold 34px Kanit";
+        ctx.fillStyle = "#FFF";
+        ctx.shadowColor = "#4CC9F0";
+        ctx.shadowBlur = 20;
+        ctx.fillText("🗺️ เลือกทวีป", GW / 2, 185);
+        ctx.shadowBlur = 0;
+        ctx.font = "17px Kanit";
+        ctx.fillStyle = "#A0C4FF";
+        ctx.fillText("คลิกทวีปที่ต้องการเพื่อเริ่มเล่น", GW / 2, 224);
+
+        selBtns.forEach((b) => {
+          const co = CONTINENTS[b.nm];
+          const hover =
+            mouseX >= b.x &&
+            mouseX <= b.x + b.w &&
+            mouseY >= b.y &&
+            mouseY <= b.y + b.h;
+          const scale = hover ? 1.04 : 1.0;
+
+          ctx.save();
+          ctx.translate(b.x + b.w / 2, b.y + b.h / 2);
+          ctx.scale(scale, scale);
+          ctx.shadowColor = co.color;
+          ctx.shadowBlur = hover ? 24 : 16;
+
+          const g = ctx.createLinearGradient(
+            -b.w / 2,
+            -b.h / 2,
+            b.w / 2,
+            b.h / 2,
+          );
+          g.addColorStop(0, co.color + (hover ? "EE" : "CC"));
+          g.addColorStop(1, co.color + (hover ? "77" : "55"));
+          ctx.fillStyle = g;
+
+          ctx.beginPath();
+          ctx.roundRect(-b.w / 2, -b.h / 2, b.w, b.h, 16);
+          ctx.fill();
+          ctx.strokeStyle = hover
+            ? "rgba(255,255,255,.5)"
+            : "rgba(255,255,255,.28)";
+          ctx.lineWidth = hover ? 2.0 : 1.5;
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+
+          ctx.textBaseline = "middle";
+          ctx.textAlign = "center";
+          ctx.font = "bold 20px Kanit";
+          ctx.fillStyle = "#FFF";
+
+          const best = localStorage.getItem("high_score_" + b.nm);
+          if (best) {
+            ctx.fillText(`${co.emoji}  ${b.nm}`, 0, -12);
+            ctx.font = "12px Kanit";
+            ctx.fillStyle = "rgba(255,255,255,.65)";
+            ctx.fillText(`${co.countries.length} ประเทศ`, 0, 8);
+            ctx.font = "bold 11px Kanit";
+            ctx.fillStyle = "#FFD700";
+            ctx.fillText(`🏆 ดีที่สุด: ${best} วิ`, 0, 26);
+          } else {
+            ctx.fillText(`${co.emoji}  ${b.nm}`, 0, -8);
+            ctx.font = "13px Kanit";
+            ctx.fillStyle = "rgba(255,255,255,.65)";
+            ctx.fillText(`${co.countries.length} ประเทศ`, 0, 14);
+          }
+          ctx.restore();
+        });
+
+        /* Back Button */
+        const back = getBackBtnPos();
+        const backHover =
+          mouseX >= back.x &&
+          mouseX <= back.x + back.w &&
+          mouseY >= back.y &&
+          mouseY <= back.y + back.h;
+
+        ctx.save();
+        ctx.shadowColor = "rgba(255, 255, 255, 0.1)";
+        ctx.shadowBlur = backHover ? 12 : 4;
+
+        const backG = ctx.createLinearGradient(
+          back.x,
+          back.y,
+          back.x,
+          back.y + back.h,
+        );
+        if (backHover) {
+          backG.addColorStop(0, "rgba(255, 255, 255, 0.18)");
+          backG.addColorStop(1, "rgba(255, 255, 255, 0.08)");
+        } else {
+          backG.addColorStop(0, "rgba(255, 255, 255, 0.08)");
+          backG.addColorStop(1, "rgba(255, 255, 255, 0.02)");
+        }
+        ctx.fillStyle = backG;
+        ctx.beginPath();
+        ctx.roundRect(back.x, back.y, back.w, back.h, back.h / 2);
+        ctx.fill();
+
+        ctx.strokeStyle = backHover
+          ? "rgba(255, 255, 255, 0.4)"
+          : "rgba(255, 255, 255, 0.15)";
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+
+        ctx.font = "bold 15px Kanit";
+        ctx.fillStyle = backHover ? "#FFF" : "#A0C4FF";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("🏠 หน้าแรก", GW / 2, back.y + back.h / 2);
+        ctx.restore();
+
+        /* 2P mode button */
+        const btn2p = get2PBtnPos();
+        const b2pHover = mouseX >= btn2p.x && mouseX <= btn2p.x + btn2p.w && mouseY >= btn2p.y && mouseY <= btn2p.y + btn2p.h;
+        ctx.save();
+        const b2pPulse = 0.8 + 0.2 * Math.sin(Date.now() / 220);
+        ctx.shadowColor = b2pHover ? "#FF6600" : "#FF4400";
+        ctx.shadowBlur = (b2pHover ? 24 : 16) * b2pPulse;
+        const g2p = ctx.createLinearGradient(btn2p.x, btn2p.y, btn2p.x + btn2p.w, btn2p.y + btn2p.h);
+        g2p.addColorStop(0, b2pHover ? "#FF6600" : "#CC3300");
+        g2p.addColorStop(0.5, "#FFD700");
+        g2p.addColorStop(1, b2pHover ? "#00E5FF" : "#00B0CC");
+        ctx.fillStyle = g2p;
+        ctx.beginPath();
+        ctx.roundRect(btn2p.x, btn2p.y, btn2p.w, btn2p.h, btn2p.h / 2);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255,255,255,.4)";
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.font = "bold 17px Kanit";
+        ctx.fillStyle = "#FFF";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.shadowColor = "rgba(0,0,0,.4)";
+        ctx.shadowBlur = 4;
+        ctx.fillText("⚔️ Battle – เล่น 2 คน", btn2p.x + btn2p.w / 2, btn2p.y + btn2p.h / 2);
+        ctx.restore();
+
+        ctx.restore();
+      }
+
+      /* =============================================
+   WIN 2P OVERLAY
+============================================= */
+      function drawOverlay2P() {
+        ctx.fillStyle = "rgba(3,3,24,.82)";
+        ctx.fillRect(0, 0, GW, GH);
+        const isP1Win = winner2P === 1;
+        const clr = isP1Win ? "#FF6600" : "#00E5FF";
+        const winnerLabel = isP1Win ? "⚔️ P1 ชนะ!" : "⚔️ P2 ชนะ!";
+        ctx.save();
+        const cw = GW - 52, ch = 340, cx = 26, cy = GH / 2 - ch / 2;
+        ctx.shadowColor = clr;
+        ctx.shadowBlur = 45;
+        const cg = ctx.createLinearGradient(cx, cy, cx + cw, cy + ch);
+        cg.addColorStop(0, "#09093A");
+        cg.addColorStop(1, "#12124A");
+        ctx.fillStyle = cg;
+        ctx.beginPath();
+        ctx.roundRect(cx, cy, cw, ch, 26);
+        ctx.fill();
+        ctx.strokeStyle = clr + "77";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = "bold 38px Kanit";
+        ctx.fillStyle = clr;
+        ctx.shadowColor = clr;
+        ctx.shadowBlur = 28;
+        ctx.fillText(winnerLabel, GW / 2, cy + 70);
+        ctx.shadowBlur = 0;
+        /* Scoreboard */
+        ctx.font = "bold 18px Kanit";
+        ctx.fillStyle = "#FF8844";
+        ctx.fillText(`⚔️ P1: ${correctHits}/${TARGET} ถูก  |  ผิด: ${wrongHits}/${MAX_WRONG}`, GW / 2, cy + 130);
+        ctx.fillStyle = "#00E5FF";
+        ctx.fillText(`⚔️ P2: ${correctHits2}/${TARGET} ถูก  |  ผิด: ${wrongHits2}/${MAX_WRONG}`, GW / 2, cy + 165);
+        ctx.font = "16px Kanit";
+        ctx.fillStyle = "#7DCFFF";
+        const secs = Math.ceil((GAME_TIME - timeLeft) / 1000);
+        ctx.fillText(`ทวีป${continent}  |  ใช้เวลา ${secs} วินาที`, GW / 2, cy + 210);
+        ctx.restore();
+        const ap = 0.5 + 0.5 * Math.sin(Date.now() / 440);
+        ctx.save();
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = "bold 22px Kanit";
+        ctx.fillStyle = `rgba(76,201,240,${ap})`;
+        ctx.shadowColor = "#4CC9F0";
+        ctx.shadowBlur = 16;
+        ctx.fillText("👆 แตะเพื่อเล่นอีกครั้ง!", GW / 2, GH - 80);
+        ctx.restore();
+      }
+
+      /* =============================================
+   WIN / LOSE OVERLAY
+============================================= */
+      function drawOverlay(title, sub, clr, hint) {
+        ctx.fillStyle = "rgba(3,3,24,.76)";
+        ctx.fillRect(0, 0, GW, GH);
+        ctx.save();
+        const cw = GW - 52,
+          ch = 310,
+          cx = 26,
+          cy = GH / 2 - ch / 2;
+        ctx.shadowColor = clr;
+        ctx.shadowBlur = 45;
+        const cg = ctx.createLinearGradient(cx, cy, cx + cw, cy + ch);
+        cg.addColorStop(0, "#09093A");
+        cg.addColorStop(1, "#12124A");
+        ctx.fillStyle = cg;
+        ctx.beginPath();
+        ctx.roundRect(cx, cy, cw, ch, 26);
+        ctx.fill();
+        ctx.strokeStyle = clr + "77";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = "bold 50px Kanit";
+        ctx.fillStyle = clr;
+        ctx.shadowColor = clr;
+        ctx.shadowBlur = 28;
+        ctx.fillText(title, GW / 2, cy + 88);
+        ctx.shadowBlur = 0;
+        ctx.font = "25px Kanit";
+        ctx.fillStyle = "#FFF";
+        ctx.fillText(sub, GW / 2, cy + 145);
+        ctx.font = "18px Kanit";
+        ctx.fillStyle = "#A0C4FF";
+        ctx.fillText(
+          `ยิงถูก ${correctHits}/${TARGET}  |  ยิงผิด ${wrongHits}/${MAX_WRONG}`,
+          GW / 2,
+          cy + 185,
+        );
+        const secs = Math.ceil((GAME_TIME - timeLeft) / 1000);
+        ctx.font = "16px Kanit";
+        ctx.fillStyle = "#7DCFFF";
+        ctx.fillText(
+          `ทวีป${continent}  |  ใช้เวลา ${secs} วินาที`,
+          GW / 2,
+          cy + 220,
+        );
+        ctx.restore();
+        const ap = 0.5 + 0.5 * Math.sin(Date.now() / 440);
+        ctx.save();
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = "bold 22px Kanit";
+        ctx.fillStyle = `rgba(76,201,240,${ap})`;
+        ctx.shadowColor = "#4CC9F0";
+        ctx.shadowBlur = 16;
+        ctx.fillText(hint, GW / 2, GH - 80);
+        ctx.restore();
+      }
+
+      /* =============================================
+   RENDER
+============================================= */
+      function drawBullet2(b) {
+        ctx.save();
+        const g = ctx.createLinearGradient(b.x, b.y - 22, b.x, b.y);
+        g.addColorStop(0, "#FFF");
+        g.addColorStop(0.5, "#00E5FF");
+        g.addColorStop(1, "transparent");
+        ctx.shadowColor = "#00E5FF";
+        ctx.shadowBlur = 14;
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.roundRect(b.x - 3, b.y - 22, 6, 22, 3);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function render(ts) {
+        ctx.save();
+        if (shakeAmt > 0.5)
+          ctx.translate(
+            (Math.random() - 0.5) * shakeAmt,
+            (Math.random() - 0.5) * shakeAmt * 0.45,
+          );
+        drawBg();
+        if (gs === ST.TITLE) {
+          updateDecorBalls(16);
+          drawTitle(ts);
+        } else if (gs === ST.SELECT) {
+          /* ไม่วาด decorBalls เพื่อไม่ทับปุ่มทวีป */
+          drawSelect();
+        } else if (gs === ST.SELECT2P) {
+          drawSelect2P();
+        } else if (gs === ST.PLAYING) {
+          balls.forEach((b) => {
+            if (b.alive) drawBall(b);
+          });
+          bullets.forEach((b) => drawBullet(b));
+          drawParticles();
+          drawPlayer();
+          drawHUD();
+        } else if (gs === ST.PLAYING2P) {
+          balls.forEach((b) => {
+            if (b.alive) drawBall(b);
+          });
+          /* Divider zone visual */
+          ctx.save();
+          ctx.fillStyle = "rgba(255,255,255,0.03)";
+          ctx.fillRect(GW / 2 - 1, 72, 2, GH - 72 - 90);
+          ctx.restore();
+          bullets.forEach((b) => drawBullet(b));
+          bullets2.forEach((b) => drawBullet2(b));
+          drawParticles();
+          drawPlayer();
+          drawPlayer2();
+          drawHUD2P();
+        } else if (gs === ST.WIN) {
+          balls.forEach((b) => {
+            if (b.alive) drawBall(b);
+          });
+          drawPlayer();
+          drawHUD();
+          drawParticles();
+          drawOverlay(
+            "🎉 ยอดเยี่ยม!",
+            `เก่งมาก! ตอบถูกครบ ${TARGET} ประเทศ`,
+            "#FFD700",
+            "👆 แตะเพื่อเล่นอีกครั้ง!",
+          );
+        } else if (gs === ST.LOSE) {
+          balls.forEach((b) => {
+            if (b.alive) drawBall(b);
+          });
+          drawPlayer();
+          drawHUD();
+          const sub =
+            timeLeft <= 0 ? "หมดเวลาแล้ว! ลองใหม่นะ" : "อย่าท้อ! ลองใหม่ได้เลย";
+          drawOverlay("💥 พลาดแล้ว!", sub, "#FF6B6B", "👆 แตะเพื่อลองใหม่!");
+        } else if (gs === ST.WIN2P) {
+          drawParticles();
+          drawOverlay2P();
+        }
+        ctx.restore();
+      }
+
+      /* =============================================
+   MAIN LOOP
+============================================= */
+      function loop(ts) {
+        const dt = Math.min(ts - lastTime, 50);
+        lastTime = ts;
+        /* ── BUG FIX: shake decays ALWAYS, not just during PLAYING ── */
+        if (shakeAmt > 0) shakeAmt = Math.max(0, shakeAmt - 0.7);
+        update(dt);
+        render(ts);
+        requestAnimationFrame(loop);
+      }
+      requestAnimationFrame(loop);
+    </script>
+  </body>
+</html>
